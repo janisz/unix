@@ -1,7 +1,4 @@
-////////////////////////////////////////////////////////////////////
-// jLib
-// Set of usefull functions and macros
-////////////////////////////////////////////////////////////////////
+/////////////////////jLIB//////////////////////////////////////////
 
 #define _GNU_SOURCE 
 #include <unistd.h>
@@ -11,6 +8,8 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+
+/////////////////////MACROS////////////////////////////////////////
 
 //Print error info and exit
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
@@ -34,6 +33,13 @@
         keep=1, count++) 										\
       for(item = (array)+count; keep; keep = !keep)    
       
+#define TRUE (!FALSE)
+#define FALSE (0)
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#define ABS(a)	   (((a) < 0) ? -(a) : (a))
+//Ensures that x is between the limits set by low and high. If low is greater than high the result is undefined.
+#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
 #define IMPLIES(x, y) (!(x) || (y))
 #define COMPARE(x, y) (((x) > (y)) - ((x) < (y)))
@@ -46,4 +52,4 @@
 //Checking whether a floating point x is Not A Number
 #define ISNAN(x) ((x) != (x))
 
-      
+////////////////////////////////////////////////////////////////////      
