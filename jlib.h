@@ -15,14 +15,22 @@
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),kill(0,SIGKILL),			\
 		     		     exit(EXIT_FAILURE))
-//Call function and exit on error		     		     
-#define CALL_AND_CHECK(f, r, ...)\
+		     		     
+//Debug
+#define DBG(source) (fprintf(stderr,"%s:%d\t",__FILE__,__LINE__),\
+                     perror(source),     		     
+		     		     
+//Call function and exit if return value != result		     		     
+#define CALL_AND_CHECK(function, result)\
     do {\
-        if (f(__VA_ARGS__) != r)\
+        if (function != result)\
         {\
-            ERR(#f "(): ");\
+            ERR(#function);\
         }\
     } while (0)		     		     
+    
+//Call function and exit if error occured
+#define CALL_AND_EXIT_ON_ERR(function) CALL_AND_CHECK(function, 0)
     
 //Iterate over table   
 #define foreach(item, array)\
