@@ -135,29 +135,29 @@ void addNewClients(int sfd, uint32_t port, Map map)
 			if(EINTR==errno) continue;
 			ERR("accept");
 		}
-		
+
 		printf("Player #%d name: ", i);
-		
+
 		char nick[NICK_LENGTH];
-		
+
 		if (bulk_read(nfd, &nick, NICK_LENGTH) < 0) {
-			fprintf(stderr,"nick read problem");		
+			fprintf(stderr,"nick read problem");
 		}
-		
+
 		printf("%s", nick);
-		
+
 		if(bulk_write(nfd, &map.width, sizeof(map.width)) < sizeof(map.width)) {
-			fprintf(stderr,"player did not recive map width");		
+			fprintf(stderr,"player did not recive map width");
 		}
-		
+
 		if(bulk_write(nfd, &map.height, sizeof(map.height)) < sizeof(map.height)) {
-			fprintf(stderr,"player did not recive map height");		
+			fprintf(stderr,"player did not recive map height");
 		}
 
 		if(bulk_write(nfd, map.map, MAP_SIZE(map)) < MAP_SIZE(map)) {
-			fprintf(stderr,"player did not recive map");		
+			fprintf(stderr,"player did not recive map");
 		}
-		
+
 		close(nfd);
 	}
 }
@@ -168,20 +168,20 @@ int main(int argc, char** argv)
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
-	
+
 	Map m = readMapFromFile("sample.map");
 	printMap(m);
-	
+
 	int socket, port = atoi(argv[1]);
 	socket=bind_inet_socket(port, SOCK_STREAM);
-	
+
 	addNewClients(socket, port, m);
-	
-	if(TEMP_FAILURE_RETRY(close(socket))<0)ERR("close");	
-	
+
+	if(TEMP_FAILURE_RETRY(close(socket))<0)ERR("close");
+
 	deleteMap(&m);
 	printMap(m);
-	
+
 	return EXIT_SUCCESS;
 }
 
