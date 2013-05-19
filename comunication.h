@@ -19,6 +19,8 @@
                      perror(source),kill(0,SIGKILL),\
 		     		     exit(EXIT_FAILURE))
 
+#define BACKLOG 4
+
 int make_socket(int domain, int type);
 int bind_inet_socket(uint16_t port,int type);
 int connect_inet_socket(struct in_addr ip, int port, int type);

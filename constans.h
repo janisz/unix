@@ -1,3 +1,5 @@
+#ifndef _CONSTANS_H_
+
 #define WALL 'X'
 #define CORRIDOR 'C'
 #define ROOM 'H'
@@ -12,3 +14,9 @@
 #define NICK_LENGTH 20
 
 #define MAP_SIZE(m) (m.width*m.height)
+
+#define TRUE (!FALSE)
+#define FALSE (0)
+
+#define _CONSTANS_H_
+#endif
