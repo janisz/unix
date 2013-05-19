@@ -1,18 +1,21 @@
 CFLAGS := -Wall -pedantic -std=gnu99 
 
-all: signals_1a
+all: server
 
-signals_1a: signals_1a.o 
-	gcc signals_1a.o -o signals_1a -lpthread
+server: server.o comunication.o
+	gcc server.o comunication.o -o server -lpthread
 
-signals_1a.o: signals_1a.c jlib.h
-	gcc -c signals_1a.c $(CFLAGS) 
+server.o: server.c constans.h
+	gcc -c server.c $(CFLAGS) 
 
-zip: signals_1a clean
+comunication.o: comunication.c comunication.h
+	gcc -c comunication.c $(CFLAGS) 
+
+zip: server clean
 	tar -jcvf ${USER}.tar.bz2 *
 
 style:
-	astyle -A8 *.c
+	astyle -A8 -T *.c
 
 clean:
-	rm -rf *o signals_1a ${USER}.tar.bz
+	rm -rf *o server ${USER}.tar.bz
