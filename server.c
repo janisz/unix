@@ -13,22 +13,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "constans.h"
+
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),kill(0,SIGKILL),\
 		     		     exit(EXIT_FAILURE))
-
-#define WALL 'X'
-#define CORRIDOR 'C'
-#define ROOM 'H'
-
-#define UP		"w"
-#define DOWN	"s"
-#define LEFT	"a"
-#define RIGHT	"d"
-#define Show	"show"
-#define Attack	"attack"
-
-#define NICK_LENGTH 20
 
 typedef struct  {
 	int x;
