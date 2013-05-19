@@ -10,3 +10,5 @@
 #define Attack	"attack"
 
 #define NICK_LENGTH 20
+
+#define MAP_SIZE(m) (m.width*m.height)

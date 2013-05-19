@@ -12,7 +12,7 @@ zip: server clean
 	tar -jcvf ${USER}.tar.bz2 *
 
 style:
-	astyle -A8 *.c
+	astyle -A8 -T *.c
 
 clean:
 	rm -rf *o server ${USER}.tar.bz
