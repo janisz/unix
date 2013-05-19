@@ -11,5 +11,8 @@ signals_1a.o: signals_1a.c jlib.h
 zip: signals_1a clean
 	tar -jcvf ${USER}.tar.bz2 *
 
+style:
+	astyle -A8 *.c
+
 clean:
 	rm -rf *o signals_1a ${USER}.tar.bz
