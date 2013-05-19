@@ -37,6 +37,25 @@ typedef struct {
 	char *map;
 } Map;
 
+/*--------------------------------------------------------------------*/
+
+Player createPlayer(const char *nick, int attribute, Position position, int descriptor)
+{
+		Player p;		
+		strncpy(p.nick, nick, NICK_LENGTH);
+		p.attribute = attribute;
+		p.position = position;
+		descriptor = descriptor;
+		return p;
+}
+
+void disposePlayer(Player player)
+{
+	close(player.descriptor);
+}
+
+/*--------------------------------------------------------------------*/
+
 Map createMap(int width, int height, char *map) 
 {
 	Map m;
@@ -92,6 +111,8 @@ void printMap(Map map)
 		printf("\n");
 	}
 }
+
+/*--------------------------------------------------------------------*/
 
 int main(int argc, char** argv)
 {
