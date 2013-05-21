@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 #include "constans.h"
 
@@ -25,6 +26,7 @@ typedef struct {
 	int width;
 	int height;
 	char *map;
+	pthread_mutex_t *mutexs;
 } Map;
 
 Map createMap(int width, int height, char *map);
