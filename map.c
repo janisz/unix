@@ -17,8 +17,8 @@ Map createMap(int width, int height, char *map)
 
 void deleteMap(Map *map)
 {
-	for (int i=0;i<MAP_SIZE(*map);i++) {
-		pthread_mutex_destroy(&map->mutexs[i]);  
+	for (int i=0; i<MAP_SIZE(*map); i++) {
+		pthread_mutex_destroy(&map->mutexs[i]);
 	}
 	map->width = map->height = 0;
 	free(map->map);
