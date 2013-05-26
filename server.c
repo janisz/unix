@@ -12,6 +12,8 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <pthread.h> 
 
 #include "comunication.h"
 #include "constans.h"
@@ -57,9 +59,9 @@ void usage(char *name)
 	printf("USAGE: %s port\n", name);
 }
 
-void* clientReader(int* data)
-{
-	int fd = *data;
+void* clientReader(void* data)
+{	
+	int fd = *((int*)data);
 	char msg[MSG_LENGTH];
 
 	while (1) {
@@ -72,16 +74,16 @@ void* clientReader(int* data)
 	return 0;
 }
 
-void* clientWriter(int* data)
-{
-	int fd = *data;
+void* clientWriter(void* data)
+{	
+	int fd = *((int*)data);
 	char msg[MSG_LENGTH];
 	int i=0;
 
 	while (1) {
 		i++;
 		sprintf(msg, "#%d message", i);
-		if(bulk_write(nfd, msg, MSG_LENGTH) < MSG_LENGTH) {
+		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"player did not recive map");
 		}
 		fprintf(stderr,"Sent: %s\n", msg);
@@ -127,8 +129,12 @@ void addNewClients(int sfd, uint32_t port, Map map)
 		if(bulk_write(nfd, map.map, MAP_SIZE(map)) < MAP_SIZE(map)) {
 			fprintf(stderr,"player did not recive map");
 		}
-
-		close(nfd);
+		
+	  pthread_t reader, writer;	  	  
+	  pthread_create(&reader,NULL,clientReader,&nfd);
+	  pthread_detach(reader);
+	  pthread_create(&writer,NULL,clientWriter,&nfd);	  
+	  pthread_detach(writer);
 	}
 }
 
