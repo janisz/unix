@@ -66,13 +66,14 @@ void addNewClients(int sfd, uint32_t port, Map map)
 	fprintf(stderr,"Waiting for clients:\n");
 
 	while(TRUE) {
-		i++;
+		i++;	
+		
 		if((nfd=accept(sfd, (struct sockaddr *)&client, &clen))<0) {
 			if(EINTR==errno) continue;
 			ERR("accept");
 		}
 
-		printf("Player #%d name: ", i);
+		fprintf(stderr,"Player #%d name: ", i);
 
 		char nick[NICK_LENGTH];
 
@@ -80,7 +81,7 @@ void addNewClients(int sfd, uint32_t port, Map map)
 			fprintf(stderr,"nick read problem");
 		}
 
-		printf("%s", nick);
+		fprintf(stderr,"%s\n", nick);
 
 		if(bulk_write(nfd, &map.width, sizeof(map.width)) < sizeof(map.width)) {
 			fprintf(stderr,"player did not recive map width");
