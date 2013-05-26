@@ -61,11 +61,11 @@ void usage(char *name)
 
 void* clientReader(void* data)
 {
-	int fd = *((int*)data);		
+	int fd = *((int*)data);
 
 	while (1) {
 		char msg[MSG_LENGTH] = {0};
-		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {			
+		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"client read problem");
 			pthread_exit(0);
 		}
@@ -77,7 +77,7 @@ void* clientReader(void* data)
 
 void* clientWriter(void* data)
 {
-	int fd = *((int*)data);	
+	int fd = *((int*)data);
 	int i=0;
 
 	while (1) {
