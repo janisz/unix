@@ -66,8 +66,8 @@ void addNewClients(int sfd, uint32_t port, Map map)
 	fprintf(stderr,"Waiting for clients:\n");
 
 	while(TRUE) {
-		i++;	
-		
+		i++;
+
 		if((nfd=accept(sfd, (struct sockaddr *)&client, &clen))<0) {
 			if(EINTR==errno) continue;
 			ERR("accept");
