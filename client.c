@@ -82,15 +82,15 @@ int main(int argc, char** argv)
 	pthread_create(&reader,NULL,clientReader,&socket);
 	pthread_detach(reader);
 
-	char msg[MSG_LENGTH] = {0};				
-	while (1) {		
-		
+	char msg[MSG_LENGTH] = {0};
+	while (1) {
+
 		if ((fgets (msg, MSG_LENGTH, stdin)) == NULL) {
 			fprintf(stderr,"Readline problem");
 		}
-		
+
 		if(bulk_write(socket, msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"problem with sending data to server");			
+			fprintf(stderr,"problem with sending data to server");
 			printf("Game ended");
 			break;
 		}
