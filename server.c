@@ -67,7 +67,7 @@ void* clientReader(void* data)
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"client read problem");
-			pthread_exit(0);
+			pthread_exit(NULL);
 		}
 		fprintf(stderr,"Recive: %s\n", msg);
 	}
@@ -87,7 +87,7 @@ void* clientWriter(void* data)
 		sprintf(msg, "#%d message", i);
 		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"player did not recive map");
-			pthread_exit(0);
+			pthread_exit(NULL);
 		}
 		fprintf(stderr,"Sent: %s\n", msg);
 	}

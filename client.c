@@ -12,10 +12,10 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 #include "comunication.h"
 #include "constans.h"
-#include "map.h"
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),kill(0,SIGKILL),\
@@ -44,6 +44,23 @@ void parse_arguments(int argc, char** argv,	struct in_addr *addr, int *port )
 	}
 }
 
+void* clientReader(void* data)
+{
+	int fd = *((int*)data);
+
+	while (1) {
+		char msg[MSG_LENGTH] = {0};
+		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
+			fprintf(stderr,"read problem");
+			printf("\n\t ** Game Over ** \n");
+			exit(0);
+		}
+		printf("%s\n", msg);
+	}
+
+	return 0;
+}
+
 int main(int argc, char** argv)
 {
 	int socket, port;
@@ -61,20 +78,23 @@ int main(int argc, char** argv)
 		fprintf(stderr,"server did not recive nick");
 	}
 
-	int width, height;
-	if (bulk_read(socket, &width, sizeof(width)) < 0) {
-		fprintf(stderr,"width read problem");
-	}
-	if (bulk_read(socket, &height, sizeof(height)) < 0) {
-		fprintf(stderr,"height read problem");
-	}
-	char rawMap[width*height];
-	if (bulk_read(socket, &rawMap, width*height) < 0) {
-		fprintf(stderr,"Map read problem");
-	}
+	pthread_t reader;
+	pthread_create(&reader,NULL,clientReader,&socket);
+	pthread_detach(reader);
 
-	Map m = createMap(width, height, rawMap);
-	printMap(m);
+	char msg[MSG_LENGTH] = {0};				
+	while (1) {		
+		
+		if ((fgets (msg, MSG_LENGTH, stdin)) == NULL) {
+			fprintf(stderr,"Readline problem");
+		}
+		
+		if(bulk_write(socket, msg, MSG_LENGTH) < MSG_LENGTH) {
+			fprintf(stderr,"problem with sending data to server");			
+			printf("Game ended");
+			break;
+		}
+	}
 
 	if((TEMP_FAILURE_RETRY(close(socket)))<0) {
 		ERR("close");
