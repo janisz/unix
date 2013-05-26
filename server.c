@@ -57,27 +57,27 @@ void usage(char *name)
 	printf("USAGE: %s port\n", name);
 }
 
-void* clientReader(void* data)
+void* clientReader(int* data)
 {
 	int fd = *data;
 	char msg[MSG_LENGTH];
-	
+
 	while (1) {
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"client read problem");
 		}
 		fprintf(stderr,"Recive: %s\n", msg);
 	}
-	
+
 	return 0;
 }
 
-void* clientWriter(void* data)
+void* clientWriter(int* data)
 {
 	int fd = *data;
 	char msg[MSG_LENGTH];
 	int i=0;
-	
+
 	while (1) {
 		i++;
 		sprintf(msg, "#%d message", i);
@@ -86,7 +86,7 @@ void* clientWriter(void* data)
 		}
 		fprintf(stderr,"Sent: %s\n", msg);
 	}
-	
+
 	return 0;
 }
 
