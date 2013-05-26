@@ -15,6 +15,8 @@
 
 #include "comunication.h"
 #include "constans.h"
+#include "map.h"
+
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),kill(0,SIGKILL),\
@@ -31,12 +33,6 @@ typedef struct  {
 	Position position;
 	int descriptor;
 } Player;
-
-typedef struct {
-	int width;
-	int height;
-	char *map;
-} Map;
 
 /*--------------------------------------------------------------------*/
 
@@ -55,66 +51,6 @@ void disposePlayer(Player player)
 	close(player.descriptor);
 }
 
-/*--------------------------------------------------------------------*/
-
-Map createMap(int width, int height, char *map)
-{
-	Map m;
-	m.width = width;
-	m.height = height;
-	m.map = (char*)malloc(sizeof(char)*MAP_SIZE(m));
-	if (map == 0) ERR("Cannot alocate memory for map");
-	strncpy(m.map, map, MAP_SIZE(m));
-	return m;
-}
-
-void deleteMap(Map *map)
-{
-	map->width = map->height = 0;
-	free(map->map);
-}
-
-Map readMapFromFile(char *filename)
-{
-	int width, height;
-
-	FILE *fp;
-	fp = fopen(filename, "r+");
-	if (fp == NULL) ERR("Cannot open map file\n");
-
-	fscanf(fp, "%d %d", &width, &height);
-	char map[width*height];
-	for (int i=0; i<width*height; i++) {
-		fscanf(fp, "%c", &map[i]);
-		if (isspace(map[i])) i--;
-	}
-
-	fclose(fp);
-
-	return createMap(width, height, map);
-}
-
-int indexOnMap(Map map, int x, int y)
-{
-	return map.width*y+x;
-}
-
-void printMap(Map map)
-{
-	if (MAP_SIZE(map) < 1) {
-		printf("Map is not loaded\n");
-		return;
-	}
-	printf("%d %d\n", map.width, map.height);
-	for (int j=0; j<map.height; j++) {
-		for (int i=0; i<map.width; i++) {
-			printf("%c", map.map[indexOnMap(map, i, j)]);
-		}
-		printf("\n");
-	}
-}
-
-/*--------------------------------------------------------------------*/
 
 void usage(char *name)
 {
@@ -131,12 +67,13 @@ void addNewClients(int sfd, uint32_t port, Map map)
 
 	while(TRUE) {
 		i++;
+
 		if((nfd=accept(sfd, (struct sockaddr *)&client, &clen))<0) {
 			if(EINTR==errno) continue;
 			ERR("accept");
 		}
 
-		printf("Player #%d name: ", i);
+		fprintf(stderr,"Player #%d name: ", i);
 
 		char nick[NICK_LENGTH];
 
@@ -144,7 +81,7 @@ void addNewClients(int sfd, uint32_t port, Map map)
 			fprintf(stderr,"nick read problem");
 		}
 
-		printf("%s", nick);
+		fprintf(stderr,"%s\n", nick);
 
 		if(bulk_write(nfd, &map.width, sizeof(map.width)) < sizeof(map.width)) {
 			fprintf(stderr,"player did not recive map width");

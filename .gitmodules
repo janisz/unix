@@ -1,0 +1,3 @@
+[submodule "datastructs"]
+	path = datastructs
+	url = https://github.com/janisz/datastructs-c.git

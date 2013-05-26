@@ -14,7 +14,7 @@
 #define NICK_LENGTH 20
 #define MSG_LENGTH (10 + NICK_LENGTH)
 
-#define MAP_SIZE(m) (m.width*m.height)
+#define MAP_SIZE(m) (((m).width)*((m).height))
 
 #define TRUE (!FALSE)
 #define FALSE (0)

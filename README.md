@@ -1,6 +1,7 @@
 Cjk
 =====
-#Napisać grę w stylu Rouge, składającą się z dwóch programów — klienta i serwera.
+
+**Napisać grę w stylu Rouge,składającą się z dwóch programów — klienta i serwera.**
 
 Serwer w momencie startu wczytuje mapę jaskiń z pliku postaci:
 
@@ -24,7 +25,7 @@ Możliwa jest walka dwóch graczy. Jeśli A atakuje gracza B, to serwer z prawdo
 
 Klient Po uruchomieniu klient pyta gracza o nick i podłącza się do serwera. Jeśli na serwerze jest już gracz o tym samym nicku, połączenie jest odrzucane. W przeciwnym przypadku serwer tworzy postać gracza i umieszcza w dowolnej grocie. Klient wypisuje na ekran informacje o aktualnym położeniu gracza i jego ew. zmianach, przyjmuje z klawiatury komendy wykonujące akcje
 
-##Gracz może wykonywać następujące akcje:
+###Gracz może wykonywać następujące akcje:
 
 1. Poruszyć się w jednym z 4 kierunków
 2. Zaatakować innego gracza, będącego w tym samym pomieszczeniu
