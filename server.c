@@ -50,7 +50,7 @@ void* clientReader(void* data)
 			removePlayer(player);
 			pthread_exit(NULL);
 		}
-		fprintf(stderr,"Recive: %s\n", msg);
+		fprintf(stderr,"%s > %s\n", player->nick, msg);
 	}
 
 	return 0;
@@ -58,7 +58,8 @@ void* clientReader(void* data)
 
 void* clientWriter(void* data)
 {
-	int fd = *((int*)data);
+	Player *player = (Player*)data;
+	int fd = player->descriptor;
 	int i=0;
 
 	while (TRUE) {
@@ -67,10 +68,10 @@ void* clientWriter(void* data)
 		i++;
 		sprintf(msg, "#%d message", i);
 		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"player did not recive message\n");
+			fprintf(stderr,"%s did not recive message\n", player->nick);
 			pthread_exit(NULL);
 		}
-		fprintf(stderr,"Sent: %s\n", msg);
+		fprintf(stderr,"%s < %s\n", player->nick, msg);
 	}
 
 	return 0;
