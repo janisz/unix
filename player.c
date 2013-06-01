@@ -21,7 +21,7 @@ Player* createPlayer(const char *nick, int attribute, int position, int descript
 
 void disposePlayer(Player player)
 {
-	close(player.descriptor);
+	if(TEMP_FAILURE_RETRY(close(player.descriptor))<0)ERR("close");	
 }
 
 void showPlayerInfo(Player *p)

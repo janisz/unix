@@ -1,4 +1,5 @@
 #ifndef _PLAYER_H_
+#define _GNU_SOURCE
 
 #include <pthread.h>
 #include "constans.h"

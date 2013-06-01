@@ -24,12 +24,9 @@
 #include "player.h"
 
 
-#define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
-                     perror(source),kill(0,SIGKILL),\
-		     		     exit(EXIT_FAILURE))
 
-
-int sethandler( void (*f)(int), int sigNo) {
+int sethandler( void (*f)(int), int sigNo)
+{
 	struct sigaction act;
 	memset(&act, 0, sizeof(struct sigaction));
 	act.sa_handler = f;
@@ -50,7 +47,7 @@ void* clientReader(void* data)
 	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"client read problem");
+			fprintf(stderr,"client read problem\n");
 			pthread_exit(NULL);
 		}
 		fprintf(stderr,"Recive: %s\n", msg);
@@ -63,7 +60,7 @@ void* clientWriter(void* data)
 {
 	int fd = *((int*)data);
 	int i=0;
-	
+
 	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		sleep(5);
@@ -97,9 +94,27 @@ Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map)
 	return player;
 }
 
+int isNickValid(arraylist *players, char nick[NICK_LENGTH])
+{
+	fprintf(stderr,"Check if %s is already used\nPlayers count: %d\n", nick, arraylist_size(players));	
+	for (int i=0;i<arraylist_size(players); i++) {		
+		Player *p = (Player*)arraylist_get(players, i);		
+		if (strcmp(p->nick, nick) == 0) {			
+			return 0;
+		}
+	}
+	return 1;
+}
+
 void addNewPlayer(int socket, arraylist *players, Map *map)
 {
 	fprintf(stderr,"Player #%d name: ", arraylist_size(players));
+
+	char buf[MSG_LENGTH] = {0};
+	strncpy(buf, "Nick: ", MSG_LENGTH);
+	if (bulk_write(socket, buf, MSG_LENGTH) < 0) {
+		fprintf(stderr,"player write problem");			
+	}
 
 	char nick[NICK_LENGTH];
 	if (bulk_read(socket, &nick, NICK_LENGTH) < 0) {
@@ -108,8 +123,17 @@ void addNewPlayer(int socket, arraylist *players, Map *map)
 	}
 
 	fprintf(stderr,"%s\n", nick);
-
-	arraylist_add(players, initializePlayer(socket, nick, map));
+	if (isNickValid(players, nick)) {
+		arraylist_add(players, initializePlayer(socket, nick, map));
+	} else {
+		
+		strncpy(buf, "Wrong nick\n", MSG_LENGTH);
+		fprintf(stderr,"%s", buf);	
+		if (bulk_write(socket, buf, MSG_LENGTH) < 0) {
+			fprintf(stderr,"player write problem");			
+		}
+		if(TEMP_FAILURE_RETRY(close(socket))<0)ERR("close");
+	}
 }
 
 void waitForPlayers(int sfd, uint32_t port, Map map)
