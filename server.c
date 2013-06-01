@@ -15,7 +15,7 @@ void usage(char *name)
 	printf("USAGE: %s port\n", name);
 }
 
-int findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
+int findPlayerIndexWithNick(arraylist *players, char nick[NICK_LENGTH])
 {
 	fprintf(stderr,"Search for %s\nPlayers count: %d\n", nick, arraylist_size(players));
 	for (int i=0; i<arraylist_size(players); i++) {
@@ -27,15 +27,34 @@ int findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
 	return -1;
 }
 
-void removePlayer(Player *player)
+int findPlayerIndex(Player *player)
 {
-	fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
-	int index = findPlayerWithNick(player->players, player->nick);
-	assert(index != -1);
-	Player *p = arraylist_get(player->players, index);
-	disposePlayer(p);
-	arraylist_remove(player->players, index);
-	fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
+	fprintf(stderr,"Search for %s\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
+	for (int i=0; i<arraylist_size(player->players); i++) {
+		Player *p = (Player*)arraylist_get(player->players, i);
+		if (strcmp(p->nick, player->nick) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+Player* findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
+{
+	int index = findPlayerIndexWithNick(players, nick);	
+	return arraylist_get(players, index);
+}
+
+void removePlayer(Player *player)
+{	
+	pthread_mutex_lock(player->players->lock);
+		fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));	
+		int index = findPlayerIndex(player);
+		assert(index >= 0);
+		disposePlayer(player);
+		arraylist_remove(player->players, index);
+		fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
+	pthread_mutex_unlock(player->players->lock);	
 }
 
 void* clientReader(void* data)
@@ -98,7 +117,7 @@ Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map, arraylist
 int isNickValid(arraylist *players, char nick[NICK_LENGTH])
 {
 	fprintf(stderr,"Check if %s is already used\nPlayers count: %d\n", nick, arraylist_size(players));
-	return findPlayerWithNick(players, nick) == -1;
+	return findPlayerIndexWithNick(players, nick) == -1;
 }
 
 void addNewPlayer(int socket, arraylist *players, Map *map)
@@ -119,9 +138,11 @@ void addNewPlayer(int socket, arraylist *players, Map *map)
 
 	fprintf(stderr,"%s\n", nick);
 	if (isNickValid(players, nick)) {
-		arraylist_add(players, initializePlayer(socket, nick, map, players));
+		Player *p = initializePlayer(socket, nick, map, players);
+		pthread_mutex_lock(players->lock);
+		arraylist_add(players, p);
+		pthread_mutex_unlock(players->lock);
 	} else {
-
 		strncpy(buf, "Wrong nick\n", MSG_LENGTH);
 		fprintf(stderr,"%s", buf);
 		if (bulk_write(socket, buf, MSG_LENGTH) < 0) {
@@ -136,8 +157,9 @@ void waitForPlayers(int sfd, uint32_t port, Map map)
 	int nfd;
 	struct sockaddr_in client;
 	socklen_t clen;
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	arraylist *players = arraylist_create();
-
+	players->lock = &mutex;
 	fprintf(stderr,"Waiting for clients:\n");
 
 	while(TRUE) {
@@ -146,10 +168,10 @@ void waitForPlayers(int sfd, uint32_t port, Map map)
 			if(EINTR==errno) continue;
 			ERR("accept");
 		}
-
 		addNewPlayer(nfd, players, &map);
-
 	}
+	pthread_mutex_destroy(&mutex);
+	arraylist_destroy(players);
 }
 
 int main(int argc, char** argv)

@@ -1,14 +1,16 @@
 #include "player.h"
 
+#include <errno.h>
+#include <unistd.h>
 #include <assert.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "datastructs/src/arraylist.h"
 
-Player* createPlayer(const char *nick, int attribute, int position, int descriptor, arraylist *players)
+Player* createPlayer(const char *nick, int attribute, int position, 
+		int descriptor, arraylist *players)
 {
 	Player *p = (Player*)malloc(sizeof(Player));
 	assert(p);
@@ -16,7 +18,7 @@ Player* createPlayer(const char *nick, int attribute, int position, int descript
 	p->attribute = attribute;
 	p->position = position;
 	p->descriptor = descriptor;
-	p->players = players;
+	p->players = players;	
 	return p;
 }
 
@@ -36,5 +38,6 @@ void showPlayerInfo(Player *p)
 	} else {
 		inet_ntop(AF_INET, &name.sin_addr, buf, sizeof buf);
 	}
-	printf("Nick: %s \t Att: %d \nPosition: %d, IP: %s\n", p->nick, p->attribute, p->position, buf);
+	printf("Nick: %s \t Att: %d \nPosition: %d, IP: %s\n",
+					p->nick, p->attribute, p->position, buf);
 }

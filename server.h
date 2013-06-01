@@ -1,11 +1,5 @@
-/* This is a Cfunctions (version 0.28) generated header file.
-   Cfunctions is a free program for extracting headers from C files.
-   Get Cfunctions from 'http://www.lemoda.net/cfunctions/'. */
-
-/* This file was generated with:
-'/home/protected/bin/cfunctions -f server.c -w server.c -n -c' */
-#ifndef CFH_SERVER_C
-#define CFH_SERVER_C
+#ifndef _SERVER_H_
+#define _SERVER_H_
 
 #define _GNU_SOURCE
 #include <assert.h>
@@ -27,42 +21,20 @@
 #include <sys/types.h>
 #include <signal.h>
 
-
-#include "datastructs/src/arraylist.h"
 #include "comunication.h"
 #include "constans.h"
 #include "map.h"
 #include "player.h"
 
-
-#line 28 "server.c"
 int sethandler (void ( *f ) ( int ) , int sigNo );
-
-#line 38 "server.c"
 void usage (char *name );
-
-#line 43 "server.c"
-int findPlayerWithNick (arraylist *players , char nick[NICK_LENGTH] );
-
-#line 55 "server.c"
+int findPlayerIndexWithNick (arraylist *players , char nick[NICK_LENGTH] );
+Player* findPlayerWithNick (arraylist *players , char nick[NICK_LENGTH] );
 void removePlayer (Player *player );
-
-#line 66 "server.c"
 void * clientReader (void * data );
-
-#line 84 "server.c"
 void * clientWriter (void * data );
-
-#line 104 "server.c"
-Player * initializePlayer (int socket , char nick[NICK_LENGTH] , Map *map , arraylist *players );
-
-#line 122 "server.c"
-int isNickValid (arraylist *players , char nick[NICK_LENGTH] );
-
-#line 128 "server.c"
+Player * initializePlayer (int socket , char nick[NICK_LENGTH] , Map *map , arraylist *players );int isNickValid (arraylist *players , char nick[NICK_LENGTH] );
 void addNewPlayer (int socket , arraylist *players , Map *map );
-
-#line 158 "server.c"
 void waitForPlayers (int sfd , uint32_t port , Map map );
 
-#endif /* CFH_SERVER_C */
+#endif /* _SERVER_H_ */
