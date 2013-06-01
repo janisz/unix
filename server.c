@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <assert.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,7 @@
 #include "comunication.h"
 #include "constans.h"
 #include "map.h"
+#include "player.h"
 
 
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
@@ -33,7 +35,7 @@ void* clientReader(void* data)
 {
 	int fd = *((int*)data);
 
-	while (1) {
+	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"client read problem");
@@ -50,7 +52,7 @@ void* clientWriter(void* data)
 	int fd = *((int*)data);
 	int i=0;
 
-	while (1) {
+	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		sleep(5);
 		i++;
@@ -65,37 +67,55 @@ void* clientWriter(void* data)
 	return 0;
 }
 
-void addNewClients(int sfd, uint32_t port, Map map)
+Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map)
 {
-	int nfd, i=0;
-	struct sockaddr_in client;
-	socklen_t clen;
+	Player *player;		
+	int att = rand() % MAX_ATTRIBUTE;	
+	int pos = getRandomRoom(map);
+	
+	*player = createPlayer(nick, att, pos, socket);
+	
+	pthread_create(&player->reader,NULL,clientReader,&socket);
+	pthread_detach(player->reader);
+	pthread_create(&player->writer,NULL,clientWriter,&socket);
+	pthread_detach(player->writer);
+	
+	return player;
+}
 
+void addNewPlayer(int socket, arraylist *players, Map *map)
+{		
+	fprintf(stderr,"Player #%d name: ", arraylist_size(players));	
+	
+	char nick[NICK_LENGTH];	
+	if (bulk_read(socket, &nick, NICK_LENGTH) < 0) {
+		fprintf(stderr,"nick read problem");
+		return;
+	}
+
+	fprintf(stderr,"%s\n", nick);
+		
+	arraylist_add(players, initializePlayer(socket, nick, map));		
+}
+
+void waitForPlayers(int sfd, uint32_t port, Map map)
+{
+	int nfd;
+	struct sockaddr_in client;
+	socklen_t clen;	
+	arraylist *players = arraylist_create();
+	
 	fprintf(stderr,"Waiting for clients:\n");
 
 	while(TRUE) {
-		i++;
-
+		
 		if((nfd=accept(sfd, (struct sockaddr *)&client, &clen))<0) {
 			if(EINTR==errno) continue;
 			ERR("accept");
 		}
 
-		fprintf(stderr,"Player #%d name: ", i);
+		addNewPlayer(nfd, players, &map);
 
-		char nick[NICK_LENGTH];
-
-		if (bulk_read(nfd, &nick, NICK_LENGTH) < 0) {
-			fprintf(stderr,"nick read problem");
-		}
-
-		fprintf(stderr,"%s\n", nick);
-
-		pthread_t reader, writer;
-		pthread_create(&reader,NULL,clientReader,&nfd);
-		pthread_detach(reader);
-		pthread_create(&writer,NULL,clientWriter,&nfd);
-		pthread_detach(writer);
 	}
 }
 
@@ -112,7 +132,7 @@ int main(int argc, char** argv)
 	int socket, port = atoi(argv[1]);
 	socket=bind_inet_socket(port, SOCK_STREAM);
 
-	addNewClients(socket, port, m);
+	waitForPlayers(socket, port, m);
 
 	if(TEMP_FAILURE_RETRY(close(socket))<0)ERR("close");
 

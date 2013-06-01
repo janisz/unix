@@ -17,13 +17,14 @@ Map createMap(int width, int height, char *map)
 	m.width = width;
 	m.height = height;
 	m.map = (char*)malloc(sizeof(char)*MAP_SIZE(m));
+	assert(m.map);
 	m.mutexs = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t)*MAP_SIZE(m));
+	assert(m.mutexs);
 	m.rooms = arraylist_create();
 
 	for (int i=0; i<MAP_SIZE(m); i++) {
 		pthread_mutex_init(&m.mutexs[i], NULL);
-	}
-	if (m.map == 0 || m.mutexs == 0) ERR("Cannot alocate memory for map");
+	}	
 
 	strncpy(m.map, map, MAP_SIZE(m));
 
@@ -66,6 +67,11 @@ Map readMapFromFile(char *filename)
 int indexOnMap(Map map, int x, int y)
 {
 	return map.width*y+x;
+}
+
+int getRandomRoom(Map *m)
+{
+	return arraylist_get(m->rooms, rand() % arraylist_size(m->rooms));
 }
 
 void printRooms(Map *map)

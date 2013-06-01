@@ -6,7 +6,7 @@ all: server client
 server: server.o comunication.o map.o arraylist.o player.o
 	$(CC) server.o comunication.o map.o arraylist.o player.o -o server -lpthread
 
-server.o: server.c constans.h 
+server.o: server.c constans.h map.h
 	$(CC) -c server.c $(CFLAGS) 
 
 client: client.o comunication.o map.o arraylist.o

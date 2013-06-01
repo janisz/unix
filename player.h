@@ -1,20 +1,18 @@
 #ifndef _PLAYER_H_
 
+#include <pthread.h>
 #include "constans.h"
-
-typedef struct  {
-	int x;
-	int y;
-} Position;
 
 typedef struct  {
 	char nick[NICK_LENGTH];
 	int attribute;
-	Position position;
+	int position;
 	int descriptor;
+	pthread_t reader;
+	pthread_t writer;
 } Player;
 
-Player createPlayer(const char *nick, int attribute, Position position, int descriptor);
+Player createPlayer(const char *nick, int attribute, int position, int descriptor);
 void disposePlayer(Player player);
 
 

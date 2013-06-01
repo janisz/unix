@@ -1,6 +1,7 @@
 #ifndef _MAP_H_
 
 #define _GNU_SOURCE
+#include <assert.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +36,7 @@ Map createMap(int width, int height, char *map);
 void deleteMap(Map *map);
 Map readMapFromFile(char *filename);
 int indexOnMap(Map map, int x, int y);
+int getRandomRoom(Map *m);
 void printMap(Map map);
 void printRooms(Map *map);
 

@@ -2,7 +2,7 @@
 
 #include "datastructs/src/arraylist.h"
 
-Player createPlayer(const char *nick, int attribute, Position position, int descriptor)
+Player createPlayer(const char *nick, int attribute, int position, int descriptor)
 {
 	Player p;
 	strncpy(p.nick, nick, NICK_LENGTH);
