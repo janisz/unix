@@ -24,7 +24,7 @@ Map createMap(int width, int height, char *map)
 
 	for (int i=0; i<MAP_SIZE(m); i++) {
 		pthread_mutex_init(&m.mutexs[i], NULL);
-	}	
+	}
 
 	strncpy(m.map, map, MAP_SIZE(m));
 

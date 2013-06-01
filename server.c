@@ -69,46 +69,48 @@ void* clientWriter(void* data)
 
 Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map)
 {
-	Player *player;		
-	int att = rand() % MAX_ATTRIBUTE;	
+	Player *player;
+	int att = rand() % MAX_ATTRIBUTE;
 	int pos = getRandomRoom(map);
-	
-	*player = createPlayer(nick, att, pos, socket);
-	
+
+	fprintf(stderr,"Create new player\n");
+	player = createPlayer(nick, att, pos, socket);	
+	showPlayerInfo(player);
+
 	pthread_create(&player->reader,NULL,clientReader,&socket);
 	pthread_detach(player->reader);
 	pthread_create(&player->writer,NULL,clientWriter,&socket);
 	pthread_detach(player->writer);
-	
+
 	return player;
 }
 
 void addNewPlayer(int socket, arraylist *players, Map *map)
-{		
-	fprintf(stderr,"Player #%d name: ", arraylist_size(players));	
-	
-	char nick[NICK_LENGTH];	
+{
+	fprintf(stderr,"Player #%d name: ", arraylist_size(players));
+
+	char nick[NICK_LENGTH];
 	if (bulk_read(socket, &nick, NICK_LENGTH) < 0) {
 		fprintf(stderr,"nick read problem");
 		return;
 	}
 
 	fprintf(stderr,"%s\n", nick);
-		
-	arraylist_add(players, initializePlayer(socket, nick, map));		
+
+	arraylist_add(players, initializePlayer(socket, nick, map));
 }
 
 void waitForPlayers(int sfd, uint32_t port, Map map)
 {
 	int nfd;
 	struct sockaddr_in client;
-	socklen_t clen;	
+	socklen_t clen;
 	arraylist *players = arraylist_create();
-	
+
 	fprintf(stderr,"Waiting for clients:\n");
 
 	while(TRUE) {
-		
+
 		if((nfd=accept(sfd, (struct sockaddr *)&client, &clen))<0) {
 			if(EINTR==errno) continue;
 			ERR("accept");

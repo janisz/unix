@@ -12,7 +12,7 @@ typedef struct  {
 	pthread_t writer;
 } Player;
 
-Player createPlayer(const char *nick, int attribute, int position, int descriptor);
+Player* createPlayer(const char *nick, int attribute, int position, int descriptor);
 void disposePlayer(Player player);
 
 
