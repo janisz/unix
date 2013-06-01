@@ -8,8 +8,10 @@
 #define DOWN	"down"
 #define LEFT	"left"
 #define RIGHT	"right"
-#define Show	"show"
-#define Attack	"attack"
+#define SHOW	"show"
+#define ATTACK	"attack"
+
+#define MAX_ATTRIBUTE 100;
 
 #define NICK_LENGTH 20
 #define MSG_LENGTH (10 + NICK_LENGTH)

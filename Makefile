@@ -27,12 +27,11 @@ player.o: player.c player.h
 arraylist.o: datastructs/src/arraylist.h datastructs/src/arraylist.c
 	$(CC) -c datastructs/src/arraylist.c $(CFLAGS)
 
-zip: server clean
-	tar -jcvf ${USER}.tar.bz2 *
-	tar -jcvf ${USER}.tar.bz2 *
+zip: style all clean
+	tar -jcvf ${USER}.tar.bz2 *	
 
 style:
 	astyle -A8 -T *.c
 
 clean:
-	rm -rf *o server ${USER}.tar.bz
+	rm -rf *.o server client *.orig ${USER}.tar.bz

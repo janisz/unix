@@ -1,7 +1,6 @@
 #include "player.h"
 
 #include "datastructs/src/arraylist.h"
-#include "constans.h"
 
 Player createPlayer(const char *nick, int attribute, Position position, int descriptor)
 {
