@@ -17,6 +17,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <signal.h>
+#include "datastructs/src/arraylist.h"
 
 
 #define WALL 'X'

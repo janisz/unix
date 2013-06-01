@@ -8,7 +8,7 @@
 
 #include "datastructs/src/arraylist.h"
 
-Player* createPlayer(const char *nick, int attribute, int position, int descriptor)
+Player* createPlayer(const char *nick, int attribute, int position, int descriptor, arraylist *players)
 {
 	Player *p = (Player*)malloc(sizeof(Player));
 	assert(p);
@@ -16,12 +16,13 @@ Player* createPlayer(const char *nick, int attribute, int position, int descript
 	p->attribute = attribute;
 	p->position = position;
 	p->descriptor = descriptor;
+	p->players = players;
 	return p;
 }
 
-void disposePlayer(Player player)
+void disposePlayer(Player *player)
 {
-	if(TEMP_FAILURE_RETRY(close(player.descriptor))<0)ERR("close");	
+	if(TEMP_FAILURE_RETRY(close(player->descriptor))<0)ERR("close");
 }
 
 void showPlayerInfo(Player *p)

@@ -1,29 +1,4 @@
-#define _GNU_SOURCE
-#include <assert.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <string.h>
-#include <time.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <pthread.h>
-#include <sys/types.h>
-#include <signal.h>
-
-#include "comunication.h"
-#include "constans.h"
-#include "map.h"
-#include "player.h"
-
-
+#include "server.h"
 
 int sethandler( void (*f)(int), int sigNo)
 {
@@ -40,14 +15,39 @@ void usage(char *name)
 	printf("USAGE: %s port\n", name);
 }
 
+int findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
+{
+	fprintf(stderr,"Search for %s\nPlayers count: %d\n", nick, arraylist_size(players));
+	for (int i=0; i<arraylist_size(players); i++) {
+		Player *p = (Player*)arraylist_get(players, i);
+		if (strcmp(p->nick, nick) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void removePlayer(Player *player)
+{
+	fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
+	int index = findPlayerWithNick(player->players, player->nick);
+	assert(index != -1);
+	Player *p = arraylist_get(player->players, index);
+	disposePlayer(p);
+	arraylist_remove(player->players, index);
+	fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
+}
+
 void* clientReader(void* data)
 {
-	int fd = *((int*)data);
+	Player *player = (Player*)data;
+	int fd = player->descriptor;
 
 	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"client read problem\n");
+			removePlayer(player);
 			pthread_exit(NULL);
 		}
 		fprintf(stderr,"Recive: %s\n", msg);
@@ -76,19 +76,19 @@ void* clientWriter(void* data)
 	return 0;
 }
 
-Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map)
+Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map, arraylist *players)
 {
 	Player *player;
 	int att = rand() % MAX_ATTRIBUTE;
 	int pos = getRandomRoom(map);
 
 	fprintf(stderr,"Create new player\n");
-	player = createPlayer(nick, att, pos, socket);
+	player = createPlayer(nick, att, pos, socket, players);
 	showPlayerInfo(player);
 
-	pthread_create(&player->reader,NULL,clientReader,&socket);
+	pthread_create(&player->reader,NULL,clientReader,player);
 	pthread_detach(player->reader);
-	pthread_create(&player->writer,NULL,clientWriter,&socket);
+	pthread_create(&player->writer,NULL,clientWriter,player);
 	pthread_detach(player->writer);
 
 	return player;
@@ -96,14 +96,8 @@ Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map)
 
 int isNickValid(arraylist *players, char nick[NICK_LENGTH])
 {
-	fprintf(stderr,"Check if %s is already used\nPlayers count: %d\n", nick, arraylist_size(players));	
-	for (int i=0;i<arraylist_size(players); i++) {		
-		Player *p = (Player*)arraylist_get(players, i);		
-		if (strcmp(p->nick, nick) == 0) {			
-			return 0;
-		}
-	}
-	return 1;
+	fprintf(stderr,"Check if %s is already used\nPlayers count: %d\n", nick, arraylist_size(players));
+	return findPlayerWithNick(players, nick) == -1;
 }
 
 void addNewPlayer(int socket, arraylist *players, Map *map)
@@ -113,7 +107,7 @@ void addNewPlayer(int socket, arraylist *players, Map *map)
 	char buf[MSG_LENGTH] = {0};
 	strncpy(buf, "Nick: ", MSG_LENGTH);
 	if (bulk_write(socket, buf, MSG_LENGTH) < 0) {
-		fprintf(stderr,"player write problem");			
+		fprintf(stderr,"player write problem");
 	}
 
 	char nick[NICK_LENGTH];
@@ -124,13 +118,13 @@ void addNewPlayer(int socket, arraylist *players, Map *map)
 
 	fprintf(stderr,"%s\n", nick);
 	if (isNickValid(players, nick)) {
-		arraylist_add(players, initializePlayer(socket, nick, map));
+		arraylist_add(players, initializePlayer(socket, nick, map, players));
 	} else {
-		
+
 		strncpy(buf, "Wrong nick\n", MSG_LENGTH);
-		fprintf(stderr,"%s", buf);	
+		fprintf(stderr,"%s", buf);
 		if (bulk_write(socket, buf, MSG_LENGTH) < 0) {
-			fprintf(stderr,"player write problem");			
+			fprintf(stderr,"player write problem");
 		}
 		if(TEMP_FAILURE_RETRY(close(socket))<0)ERR("close");
 	}

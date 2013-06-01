@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include "constans.h"
 
+#include "datastructs/src/arraylist.h"
+
 typedef struct  {
 	char nick[NICK_LENGTH];
 	int attribute;
@@ -11,10 +13,11 @@ typedef struct  {
 	int descriptor;
 	pthread_t reader;
 	pthread_t writer;
+	arraylist *players;
 } Player;
 
-Player* createPlayer(const char *nick, int attribute, int position, int descriptor);
-void disposePlayer(Player player);
+Player* createPlayer(const char *nick, int attribute, int position, int descriptor, arraylist *players);
+void disposePlayer(Player *player);
 
 
 #define _PLAYER_H_

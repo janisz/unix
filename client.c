@@ -74,12 +74,12 @@ int main(int argc, char** argv)
 	pthread_create(&reader,NULL,clientReader,&socket);
 	pthread_detach(reader);
 
-	char nick[NICK_LENGTH];	
+	char nick[NICK_LENGTH];
 	scanf("%s", nick);
 
 	if(bulk_write(socket, nick, NICK_LENGTH) < NICK_LENGTH) {
 		fprintf(stderr,"server did not recive nick");
-	}	
+	}
 
 	char msg[MSG_LENGTH] = {0};
 	while (1) {

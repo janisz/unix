@@ -71,7 +71,7 @@ int indexOnMap(Map map, int x, int y)
 
 int getRandomRoom(Map *m)
 {
-	return arraylist_get(m->rooms, rand() % arraylist_size(m->rooms));
+	return *((int*)arraylist_get(m->rooms, rand() % arraylist_size(m->rooms)));
 }
 
 void printRooms(Map *map)
