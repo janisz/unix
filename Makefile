@@ -3,6 +3,9 @@ CC := color-gcc
 
 all: server client
 
+debug: CC += -DDEBUG -g
+debug: server client
+
 server: server.o comunication.o map.o arraylist.o player.o
 	$(CC) server.o comunication.o map.o arraylist.o player.o -o server -lpthread
 

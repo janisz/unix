@@ -15,6 +15,8 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <signal.h>
 
 #include "comunication.h"
 #include "constans.h"
@@ -25,6 +27,16 @@
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),kill(0,SIGKILL),\
 		     		     exit(EXIT_FAILURE))
+
+
+int sethandler( void (*f)(int), int sigNo) {
+	struct sigaction act;
+	memset(&act, 0, sizeof(struct sigaction));
+	act.sa_handler = f;
+	if (-1==sigaction(sigNo, &act, NULL))
+		return -1;
+	return 0;
+}
 
 void usage(char *name)
 {
@@ -51,14 +63,14 @@ void* clientWriter(void* data)
 {
 	int fd = *((int*)data);
 	int i=0;
-
+	
 	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		sleep(5);
 		i++;
 		sprintf(msg, "#%d message", i);
 		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"player did not recive message");
+			fprintf(stderr,"player did not recive message\n");
 			pthread_exit(NULL);
 		}
 		fprintf(stderr,"Sent: %s\n", msg);
@@ -74,7 +86,7 @@ Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map)
 	int pos = getRandomRoom(map);
 
 	fprintf(stderr,"Create new player\n");
-	player = createPlayer(nick, att, pos, socket);	
+	player = createPlayer(nick, att, pos, socket);
 	showPlayerInfo(player);
 
 	pthread_create(&player->reader,NULL,clientReader,&socket);
@@ -127,6 +139,8 @@ int main(int argc, char** argv)
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
+
+	signal(SIGPIPE, SIG_IGN);
 
 	Map m = readMapFromFile("sample.map");
 	printMap(m);
