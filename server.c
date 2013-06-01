@@ -1,75 +1,75 @@
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <string.h>
-#include <time.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <pthread.h>
+#include "server.h"
 
-#include "comunication.h"
-#include "constans.h"
-#include "map.h"
-
-
-#define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
-                     perror(source),kill(0,SIGKILL),\
-		     		     exit(EXIT_FAILURE))
-
-typedef struct  {
-	int x;
-	int y;
-} Position;
-
-typedef struct  {
-	char nick[NICK_LENGTH];
-	int attribute;
-	Position position;
-	int descriptor;
-} Player;
-
-/*--------------------------------------------------------------------*/
-
-Player createPlayer(const char *nick, int attribute, Position position, int descriptor)
+int sethandler( void (*f)(int), int sigNo)
 {
-	Player p;
-	strncpy(p.nick, nick, NICK_LENGTH);
-	p.attribute = attribute;
-	p.position = position;
-	descriptor = descriptor;
-	return p;
+	struct sigaction act;
+	memset(&act, 0, sizeof(struct sigaction));
+	act.sa_handler = f;
+	if (-1==sigaction(sigNo, &act, NULL))
+		return -1;
+	return 0;
 }
-
-void disposePlayer(Player player)
-{
-	close(player.descriptor);
-}
-
 
 void usage(char *name)
 {
 	printf("USAGE: %s port\n", name);
 }
 
+int findPlayerIndexWithNick(arraylist *players, char nick[NICK_LENGTH])
+{
+	fprintf(stderr,"Search for %s\nPlayers count: %d\n", nick, arraylist_size(players));
+	for (int i=0; i<arraylist_size(players); i++) {
+		Player *p = (Player*)arraylist_get(players, i);
+		if (strcmp(p->nick, nick) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+int findPlayerIndex(Player *player)
+{
+	fprintf(stderr,"Search for %s\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
+	for (int i=0; i<arraylist_size(player->players); i++) {
+		Player *p = (Player*)arraylist_get(player->players, i);
+		if (strcmp(p->nick, player->nick) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+Player* findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
+{
+	int index = findPlayerIndexWithNick(players, nick);
+	return arraylist_get(players, index);
+}
+
+void removePlayer(Player *player)
+{
+	pthread_mutex_lock(player->players->lock);
+	fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
+	int index = findPlayerIndex(player);
+	assert(index >= 0);
+	disposePlayer(player);
+	arraylist_remove(player->players, index);
+	fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
+	pthread_mutex_unlock(player->players->lock);
+}
+
 void* clientReader(void* data)
 {
-	int fd = *((int*)data);
+	Player *player = (Player*)data;
+	int fd = player->descriptor;
 
-	while (1) {
+	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"client read problem");
+			fprintf(stderr,"client read problem\n");
+			removePlayer(player);
 			pthread_exit(NULL);
 		}
-		fprintf(stderr,"Recive: %s\n", msg);
+		fprintf(stderr,"%s > %s\n", player->nick, msg);
 	}
 
 	return 0;
@@ -77,68 +77,101 @@ void* clientReader(void* data)
 
 void* clientWriter(void* data)
 {
-	int fd = *((int*)data);
+	Player *player = (Player*)data;
+	int fd = player->descriptor;
 	int i=0;
 
-	while (1) {
+	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		sleep(5);
 		i++;
 		sprintf(msg, "#%d message", i);
 		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"player did not recive map");
+			fprintf(stderr,"%s did not recive message\n", player->nick);
 			pthread_exit(NULL);
 		}
-		fprintf(stderr,"Sent: %s\n", msg);
+		fprintf(stderr,"%s < %s\n", player->nick, msg);
 	}
 
 	return 0;
 }
 
-void addNewClients(int sfd, uint32_t port, Map map)
+Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map, arraylist *players)
 {
-	int nfd, i=0;
+	Player *player;
+	int att = rand() % MAX_ATTRIBUTE;
+	int pos = getRandomRoom(map);
+
+	fprintf(stderr,"Create new player\n");
+	player = createPlayer(nick, att, pos, socket, players);
+	showPlayerInfo(player);
+
+	pthread_create(&player->reader,NULL,clientReader,player);
+	pthread_detach(player->reader);
+	pthread_create(&player->writer,NULL,clientWriter,player);
+	pthread_detach(player->writer);
+
+	return player;
+}
+
+int isNickValid(arraylist *players, char nick[NICK_LENGTH])
+{
+	fprintf(stderr,"Check if %s is already used\nPlayers count: %d\n", nick, arraylist_size(players));
+	return findPlayerIndexWithNick(players, nick) == -1;
+}
+
+void addNewPlayer(int socket, arraylist *players, Map *map)
+{
+	fprintf(stderr,"Player #%d name: ", arraylist_size(players));
+
+	char buf[MSG_LENGTH] = {0};
+	strncpy(buf, "Nick: ", MSG_LENGTH);
+	if (bulk_write(socket, buf, MSG_LENGTH) < 0) {
+		fprintf(stderr,"player write problem");
+	}
+
+	char nick[NICK_LENGTH];
+	if (bulk_read(socket, &nick, NICK_LENGTH) < 0) {
+		fprintf(stderr,"nick read problem");
+		return;
+	}
+
+	fprintf(stderr,"%s\n", nick);
+	if (isNickValid(players, nick)) {
+		Player *p = initializePlayer(socket, nick, map, players);
+		pthread_mutex_lock(players->lock);
+		arraylist_add(players, p);
+		pthread_mutex_unlock(players->lock);
+	} else {
+		strncpy(buf, "Wrong nick\n", MSG_LENGTH);
+		fprintf(stderr,"%s", buf);
+		if (bulk_write(socket, buf, MSG_LENGTH) < 0) {
+			fprintf(stderr,"player write problem");
+		}
+		if(TEMP_FAILURE_RETRY(close(socket))<0)ERR("close");
+	}
+}
+
+void waitForPlayers(int sfd, uint32_t port, Map map)
+{
+	int nfd;
 	struct sockaddr_in client;
 	socklen_t clen;
-
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	arraylist *players = arraylist_create();
+	players->lock = &mutex;
 	fprintf(stderr,"Waiting for clients:\n");
 
 	while(TRUE) {
-		i++;
 
 		if((nfd=accept(sfd, (struct sockaddr *)&client, &clen))<0) {
 			if(EINTR==errno) continue;
 			ERR("accept");
 		}
-
-		fprintf(stderr,"Player #%d name: ", i);
-
-		char nick[NICK_LENGTH];
-
-		if (bulk_read(nfd, &nick, NICK_LENGTH) < 0) {
-			fprintf(stderr,"nick read problem");
-		}
-
-		fprintf(stderr,"%s\n", nick);
-
-		if(bulk_write(nfd, &map.width, sizeof(map.width)) < sizeof(map.width)) {
-			fprintf(stderr,"player did not recive map width");
-		}
-
-		if(bulk_write(nfd, &map.height, sizeof(map.height)) < sizeof(map.height)) {
-			fprintf(stderr,"player did not recive map height");
-		}
-
-		if(bulk_write(nfd, map.map, MAP_SIZE(map)) < MAP_SIZE(map)) {
-			fprintf(stderr,"player did not recive map");
-		}
-
-		pthread_t reader, writer;
-		pthread_create(&reader,NULL,clientReader,&nfd);
-		pthread_detach(reader);
-		pthread_create(&writer,NULL,clientWriter,&nfd);
-		pthread_detach(writer);
+		addNewPlayer(nfd, players, &map);
 	}
+	pthread_mutex_destroy(&mutex);
+	arraylist_destroy(players);
 }
 
 int main(int argc, char** argv)
@@ -148,13 +181,15 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
+	signal(SIGPIPE, SIG_IGN);
+
 	Map m = readMapFromFile("sample.map");
 	printMap(m);
 
 	int socket, port = atoi(argv[1]);
 	socket=bind_inet_socket(port, SOCK_STREAM);
 
-	addNewClients(socket, port, m);
+	waitForPlayers(socket, port, m);
 
 	if(TEMP_FAILURE_RETRY(close(socket))<0)ERR("close");
 

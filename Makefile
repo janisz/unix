@@ -1,30 +1,40 @@
 CFLAGS := -Wall -pedantic -std=gnu99 
+CC := color-gcc
 
 all: server client
 
-server: server.o comunication.o map.o
-	gcc server.o comunication.o map.o -o server -lpthread
+debug: CC += -DDEBUG -g
+debug: server client
 
-server.o: server.c constans.h
-	gcc -c server.c $(CFLAGS) 
+server: server.o comunication.o map.o arraylist.o player.o
+	$(CC) server.o comunication.o map.o arraylist.o player.o -o server -lpthread
 
-client: client.o comunication.o map.o
-	gcc client.o comunication.o map.o -o client -lpthread
+server.o: server.c constans.h map.h
+	$(CC) -c server.c $(CFLAGS) 
+
+client: client.o comunication.o map.o arraylist.o
+	$(CC) client.o comunication.o map.o arraylist.o -o client -lpthread
 
 client.o: client.c
-	gcc -c client.c $(CFLAGS) 
+	$(CC) -c client.c $(CFLAGS) 
 
 comunication.o: comunication.c comunication.h
-	gcc -c comunication.c $(CFLAGS) 
+	$(CC) -c comunication.c $(CFLAGS) 
 
-map.o: map.c map.h
-	gcc -c map.c $(CFLAGS) 
+map.o: map.c map.h 
+	$(CC) -c map.c $(CFLAGS) 
 
-zip: server clean
-	tar -jcvf ${USER}.tar.bz2 *
+player.o: player.c player.h 
+	$(CC) -c player.c $(CFLAGS) 
+
+arraylist.o: datastructs/src/arraylist.h datastructs/src/arraylist.c
+	$(CC) -c datastructs/src/arraylist.c $(CFLAGS)
+
+zip: style all clean
+	tar -jcvf ${USER}.tar.bz2 *	
 
 style:
 	astyle -A8 -T *.c
 
 clean:
-	rm -rf *o server ${USER}.tar.bz
+	rm -rf *.o server client *.orig ${USER}.tar.bz

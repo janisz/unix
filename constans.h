@@ -1,15 +1,23 @@
 #ifndef _CONSTANS_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <signal.h>
+
+
 #define WALL 'X'
 #define CORRIDOR 'C'
 #define ROOM 'H'
 
-#define UP		"w"
-#define DOWN	"s"
-#define LEFT	"a"
-#define RIGHT	"d"
-#define Show	"show"
-#define Attack	"attack"
+#define UP		"up"
+#define DOWN	"down"
+#define LEFT	"left"
+#define RIGHT	"right"
+#define SHOW	"show"
+#define ATTACK	"attack"
+
+#define MAX_ATTRIBUTE 100;
 
 #define NICK_LENGTH 20
 #define MSG_LENGTH (10 + NICK_LENGTH)
@@ -18,6 +26,10 @@
 
 #define TRUE (!FALSE)
 #define FALSE (0)
+
+#define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
+                     perror(source),kill(0,SIGKILL),\
+		     		     exit(EXIT_FAILURE))
 
 #define _CONSTANS_H_
 #endif

@@ -15,3 +15,8 @@
 *.exe
 *.out
 *.app
+client
+server
+
+#AStyle backup
+*.orig
