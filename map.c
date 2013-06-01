@@ -40,6 +40,7 @@ void deleteMap(Map *map)
 	map->width = map->height = 0;
 	free(map->map);
 	free(map->mutexs);
+	arraylist_destroy(map->rooms);
 }
 
 Map readMapFromFile(char *filename)

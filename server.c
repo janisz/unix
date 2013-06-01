@@ -24,36 +24,6 @@
                      perror(source),kill(0,SIGKILL),\
 		     		     exit(EXIT_FAILURE))
 
-typedef struct  {
-	int x;
-	int y;
-} Position;
-
-typedef struct  {
-	char nick[NICK_LENGTH];
-	int attribute;
-	Position position;
-	int descriptor;
-} Player;
-
-/*--------------------------------------------------------------------*/
-
-Player createPlayer(const char *nick, int attribute, Position position, int descriptor)
-{
-	Player p;
-	strncpy(p.nick, nick, NICK_LENGTH);
-	p.attribute = attribute;
-	p.position = position;
-	descriptor = descriptor;
-	return p;
-}
-
-void disposePlayer(Player player)
-{
-	close(player.descriptor);
-}
-
-
 void usage(char *name)
 {
 	printf("USAGE: %s port\n", name);
@@ -86,7 +56,7 @@ void* clientWriter(void* data)
 		i++;
 		sprintf(msg, "#%d message", i);
 		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"player did not recive map");
+			fprintf(stderr,"player did not recive message");
 			pthread_exit(NULL);
 		}
 		fprintf(stderr,"Sent: %s\n", msg);
@@ -120,18 +90,6 @@ void addNewClients(int sfd, uint32_t port, Map map)
 		}
 
 		fprintf(stderr,"%s\n", nick);
-
-		if(bulk_write(nfd, &map.width, sizeof(map.width)) < sizeof(map.width)) {
-			fprintf(stderr,"player did not recive map width");
-		}
-
-		if(bulk_write(nfd, &map.height, sizeof(map.height)) < sizeof(map.height)) {
-			fprintf(stderr,"player did not recive map height");
-		}
-
-		if(bulk_write(nfd, map.map, MAP_SIZE(map)) < MAP_SIZE(map)) {
-			fprintf(stderr,"player did not recive map");
-		}
 
 		pthread_t reader, writer;
 		pthread_create(&reader,NULL,clientReader,&nfd);

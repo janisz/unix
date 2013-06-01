@@ -3,8 +3,8 @@ CC := color-gcc
 
 all: server client
 
-server: server.o comunication.o map.o arraylist.o
-	$(CC) server.o comunication.o map.o arraylist.o -o server -lpthread
+server: server.o comunication.o map.o arraylist.o player.o
+	$(CC) server.o comunication.o map.o arraylist.o player.o -o server -lpthread
 
 server.o: server.c constans.h 
 	$(CC) -c server.c $(CFLAGS) 
@@ -20,6 +20,9 @@ comunication.o: comunication.c comunication.h
 
 map.o: map.c map.h 
 	$(CC) -c map.c $(CFLAGS) 
+
+player.o: player.c player.h 
+	$(CC) -c player.c $(CFLAGS) 
 
 arraylist.o: datastructs/src/arraylist.h datastructs/src/arraylist.c
 	$(CC) -c datastructs/src/arraylist.c $(CFLAGS)

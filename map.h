@@ -36,7 +36,7 @@ void deleteMap(Map *map);
 Map readMapFromFile(char *filename);
 int indexOnMap(Map map, int x, int y);
 void printMap(Map map);
-void printRooms(Map *map) ;
+void printRooms(Map *map);
 
 #define _MAP_H_
 #endif
