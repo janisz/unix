@@ -4,10 +4,10 @@
 #define CORRIDOR 'C'
 #define ROOM 'H'
 
-#define UP		"w"
-#define DOWN	"s"
-#define LEFT	"a"
-#define RIGHT	"d"
+#define UP		"up"
+#define DOWN	"down"
+#define LEFT	"left"
+#define RIGHT	"right"
 #define Show	"show"
 #define Attack	"attack"
 
