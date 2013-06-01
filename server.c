@@ -41,20 +41,20 @@ int findPlayerIndex(Player *player)
 
 Player* findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
 {
-	int index = findPlayerIndexWithNick(players, nick);	
+	int index = findPlayerIndexWithNick(players, nick);
 	return arraylist_get(players, index);
 }
 
 void removePlayer(Player *player)
-{	
+{
 	pthread_mutex_lock(player->players->lock);
-		fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));	
-		int index = findPlayerIndex(player);
-		assert(index >= 0);
-		disposePlayer(player);
-		arraylist_remove(player->players, index);
-		fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
-	pthread_mutex_unlock(player->players->lock);	
+	fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
+	int index = findPlayerIndex(player);
+	assert(index >= 0);
+	disposePlayer(player);
+	arraylist_remove(player->players, index);
+	fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
+	pthread_mutex_unlock(player->players->lock);
 }
 
 void* clientReader(void* data)

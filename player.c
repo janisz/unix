@@ -9,8 +9,8 @@
 #include <stdlib.h>
 
 
-Player* createPlayer(const char *nick, int attribute, int position, 
-		int descriptor, arraylist *players)
+Player* createPlayer(const char *nick, int attribute, int position,
+					 int descriptor, arraylist *players)
 {
 	Player *p = (Player*)malloc(sizeof(Player));
 	assert(p);
@@ -18,7 +18,7 @@ Player* createPlayer(const char *nick, int attribute, int position,
 	p->attribute = attribute;
 	p->position = position;
 	p->descriptor = descriptor;
-	p->players = players;	
+	p->players = players;
 	return p;
 }
 
@@ -39,5 +39,5 @@ void showPlayerInfo(Player *p)
 		inet_ntop(AF_INET, &name.sin_addr, buf, sizeof buf);
 	}
 	printf("Nick: %s \t Att: %d \nPosition: %d, IP: %s\n",
-					p->nick, p->attribute, p->position, buf);
+		   p->nick, p->attribute, p->position, buf);
 }
