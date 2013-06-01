@@ -3,14 +3,14 @@ CC := color-gcc
 
 all: server client
 
-server: server.o comunication.o map.o
-	$(CC) server.o comunication.o map.o -o server -lpthread
+server: server.o comunication.o map.o arraylist.o
+	$(CC) server.o comunication.o map.o arraylist.o -o server -lpthread
 
-server.o: server.c constans.h
+server.o: server.c constans.h 
 	$(CC) -c server.c $(CFLAGS) 
 
-client: client.o comunication.o map.o
-	$(CC) client.o comunication.o map.o -o client -lpthread
+client: client.o comunication.o map.o arraylist.o
+	$(CC) client.o comunication.o map.o arraylist.o -o client -lpthread
 
 client.o: client.c
 	$(CC) -c client.c $(CFLAGS) 
@@ -18,8 +18,11 @@ client.o: client.c
 comunication.o: comunication.c comunication.h
 	$(CC) -c comunication.c $(CFLAGS) 
 
-map.o: map.c map.h
+map.o: map.c map.h 
 	$(CC) -c map.c $(CFLAGS) 
+
+arraylist.o: datastructs/src/arraylist.h datastructs/src/arraylist.c
+	$(CC) -c datastructs/src/arraylist.c $(CFLAGS)
 
 zip: server clean
 	tar -jcvf ${USER}.tar.bz2 *

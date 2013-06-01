@@ -1,5 +1,16 @@
 #include "map.h"
 
+void setRooms(Map *m)
+{
+	for (int i=0; i<MAP_SIZE(*m); i++) {
+		if (m->map[i] == ROOM) {
+			int *p = (int*)malloc(sizeof(int));
+			*p = i;
+			arraylist_add(m->rooms, (void*)p);
+		}
+	}
+}
+
 Map createMap(int width, int height, char *map)
 {
 	Map m;
@@ -7,11 +18,17 @@ Map createMap(int width, int height, char *map)
 	m.height = height;
 	m.map = (char*)malloc(sizeof(char)*MAP_SIZE(m));
 	m.mutexs = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t)*MAP_SIZE(m));
+	m.rooms = arraylist_create();
+
 	for (int i=0; i<MAP_SIZE(m); i++) {
-		pthread_mutex_init(&m.mutexs[i], NULL); ;
+		pthread_mutex_init(&m.mutexs[i], NULL);
 	}
 	if (m.map == 0 || m.mutexs == 0) ERR("Cannot alocate memory for map");
+
 	strncpy(m.map, map, MAP_SIZE(m));
+
+	setRooms(&m);
+
 	return m;
 }
 
@@ -50,6 +67,13 @@ int indexOnMap(Map map, int x, int y)
 	return map.width*y+x;
 }
 
+void printRooms(Map *map)
+{
+	for (int i=0; i<arraylist_size(map->rooms); i++) {
+		printf("#%d\t%d\n", i, *((int*)arraylist_get(map->rooms, i)));
+	}
+}
+
 void printMap(Map map)
 {
 	if (MAP_SIZE(map) < 1) {
@@ -63,4 +87,8 @@ void printMap(Map map)
 		}
 		printf("\n");
 	}
+
+	printf("Rooms:\n");
+
+	printRooms(&map);
 }
