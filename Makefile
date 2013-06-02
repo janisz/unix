@@ -6,11 +6,14 @@ all: server client
 debug: CC += -DDEBUG -g
 debug: server client
 
-server: server.o comunication.o map.o arraylist.o player.o
-	$(CC) server.o comunication.o map.o arraylist.o player.o -o server -lpthread
+server: server.o comunication.o map.o arraylist.o player.o gamelogic.o
+	$(CC) server.o comunication.o map.o arraylist.o player.o gamelogic.o -o server -lpthread
 
-server.o: server.c constans.h map.h
+server.o: server.c constans.h map.h gamelogic.h
 	$(CC) -c server.c $(CFLAGS) 
+
+gamelogic.o: gamelogic.c gamelogic.h
+	$(CC) -c gamelogic.c $(CFLAGS) 
 
 client: client.o comunication.o map.o arraylist.o
 	$(CC) client.o comunication.o map.o arraylist.o -o client -lpthread

@@ -72,6 +72,14 @@ void* clientReader(void* data)
 			pthread_exit(NULL);
 		}
 		fprintf(stderr,"%s > %s\n", player->nick, msg);
+
+		char *c = strchr(msg, '\n');
+		if (c)
+			*c = 0;
+
+		char *ret;
+		fptr f = actionFactory(msg, &ret);
+		f(player, ret);
 	}
 
 	return 0;

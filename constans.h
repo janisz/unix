@@ -27,6 +27,8 @@
 #define TRUE (!FALSE)
 #define FALSE (0)
 
+#define DBG			(fprintf(stderr,"%s:%d:\t",__FILE__,__LINE__)); 
+
 #define ERR(source) (fprintf(stderr,"%s:%d\n",__FILE__,__LINE__),\
                      perror(source),kill(0,SIGKILL),\
 		     		     exit(EXIT_FAILURE))

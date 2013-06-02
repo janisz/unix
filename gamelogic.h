@@ -1,6 +1,9 @@
 #ifndef _GAME_LOGIC_H_
 
 #include "constans.h"
+#include "player.h"
+#include <string.h>
+
 typedef int (*fptr)(Player*, char*);
 
 int show(Player *player, char*);
@@ -17,7 +20,7 @@ int attack(Player *player, char* opponentNick);
 
 int undefinied(Player *player, char* action);
 
-fptr actionFactory(char action[MSG_LENGTH]);
+fptr actionFactory(char action[MSG_LENGTH], char** ret);
 
 #define _GAME_LOGIC_H_
 #endif
