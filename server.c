@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include "gamelogic.h"
+
 int sethandler( void (*f)(int), int sigNo)
 {
 	struct sigaction act;
