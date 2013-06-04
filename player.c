@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <pthread.h>
 
 Player* createPlayer(const char *nick, int attribute, int position,
 					 int descriptor, arraylist *players)
@@ -19,12 +19,17 @@ Player* createPlayer(const char *nick, int attribute, int position,
 	p->position = position;
 	p->descriptor = descriptor;
 	p->players = players;
+	pthread_mutex_init((p->bufforLock), NULL);
+	pthread_cond_init((p->bufforCondition), NULL);
 	return p;
 }
 
-void disposePlayer(Player *player)
+void disposePlayer(Player *p)
 {
-	if(TEMP_FAILURE_RETRY(close(player->descriptor))<0)ERR("close");
+	if(TEMP_FAILURE_RETRY(close(p->descriptor))<0)ERR("close");
+	pthread_cond_destroy((p->bufforCondition));
+	pthread_mutex_destroy((p->bufforLock));
+
 }
 
 void showPlayerInfo(Player *p)

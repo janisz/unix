@@ -14,7 +14,9 @@ typedef struct  {
 	pthread_t reader;
 	pthread_t writer;
 	arraylist *players;
-	pthread_mutex_t *playersLock;
+	char* buffor;
+	pthread_mutex_t *bufforLock;
+	pthread_cond_t  *bufforCondition;
 } Player;
 
 Player* createPlayer(const char *nick, int attribute, int position, int descriptor, arraylist *players);
