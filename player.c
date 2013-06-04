@@ -19,6 +19,7 @@ Player* createPlayer(const char *nick, int attribute, int position,
 	p->position = position;
 	p->descriptor = descriptor;
 	p->players = players;
+	p->buffor = arraylist_create();
 	pthread_mutex_init((p->bufforLock), NULL);
 	pthread_cond_init((p->bufforCondition), NULL);
 	return p;
@@ -29,6 +30,7 @@ void disposePlayer(Player *p)
 	if(TEMP_FAILURE_RETRY(close(p->descriptor))<0)ERR("close");
 	pthread_cond_destroy((p->bufforCondition));
 	pthread_mutex_destroy((p->bufforLock));
+	arraylist_destroy(p->buffor);
 }
 
 void showPlayerInfo(Player *p)
