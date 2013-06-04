@@ -1,5 +1,4 @@
 CFLAGS := -Wall -pedantic -std=gnu99 
-CC := color-gcc
 
 all: server client
 
