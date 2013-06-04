@@ -4,6 +4,23 @@ int show(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: Show request\n", player->nick);
+	
+	arraylist *list = arraylist_create();
+		
+	for (int i=0; i<arraylist_size(player->players); i++)
+	{
+		Player* p = arraylist_get(player->players, i);
+		char *msg = (char*)malloc(MSG_LENGTH);
+		snprintf(msg, MSG_LENGTH, "%s position: %d", p->nick, p->position);
+		arraylist_add(list, msg);
+	}
+	
+	pthread_mutex_lock(player->bufforLock);
+	arraylist_join(player->buffor, list);
+	pthread_mutex_unlock(player->bufforLock);
+	
+	arraylist_destroy(list);
+	
 	return 0;
 }
 

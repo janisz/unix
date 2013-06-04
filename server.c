@@ -106,9 +106,8 @@ void* clientWriter(void* data)
 				DBG;
 				fprintf(stderr,"%s has %d pending messages \n", player->nick, arraylist_size(player->buffor));
 				while (arraylist_size(player->buffor) != 0) {
-					char *buf = (char*)arraylist_pop(player->buffor);
-					int len = strlen(buf);
-					if(bulk_write(fd, buf, len) < 0) {
+					char *buf = (char*)arraylist_pop(player->buffor);					
+					if(bulk_write(fd, buf, MSG_LENGTH) < 0) {
 						fprintf(stderr,"%s did not recive message\n", player->nick);
 						play = 0;
 					}
