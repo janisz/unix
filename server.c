@@ -78,7 +78,9 @@ void* clientReader(void* data)
 
 		char *ret;
 		fptr f = actionFactory(msg, &ret);
+		pthread_mutex_lock(player->playerLock);
 		f(player, ret);
+		pthread_mutex_unlock(player->playerLock);
 		DBG;
 	}
 
@@ -92,7 +94,6 @@ void* clientWriter(void* data)
 	int play = 1;
 
 	while (play) {
-
 		pthread_mutex_lock(player->bufforLock);
 		do {
 			if (arraylist_size(player->buffor) > 0) {
@@ -105,17 +106,15 @@ void* clientWriter(void* data)
 						play = 0;
 					}
 					fprintf(stderr,"%s < %s\n", player->nick, buf);
-					buf = NULL;	//arraylist takes care of memory					
+					buf = NULL;	//arraylist takes care of memory
 				}
 				break;
 			} else {
 				pthread_cond_wait(player->bufforCondition, player->bufforLock);
 			}
 		} while (1);
-
 		pthread_mutex_unlock(player->bufforLock);
 	}
-
 	return 0;
 }
 
