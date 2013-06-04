@@ -19,10 +19,10 @@
 
 #define ILLEGAL_MOVE "Illegal Move"
 
-#define MAX_ATTRIBUTE 100;
+#define MAX_ATTRIBUTE 100
 
 #define NICK_LENGTH 20
-#define MSG_LENGTH (10 + NICK_LENGTH)
+#define MSG_LENGTH (20 + 2*NICK_LENGTH)
 
 #define MAP_SIZE(m) (((m).width)*((m).height))
 
@@ -37,6 +37,8 @@
 
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+
+#define SEED (getpid() * time(NULL) * (pthread_self() * 31 + 1))
 
 #define _CONSTANS_H_
 #endif

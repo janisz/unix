@@ -197,10 +197,49 @@ int right(Player *player, char* nil)
 	return 0;
 }
 
+int shouldKillPlayerB(int attA, int attB)
+{
+	int prob = ((100*attA)/(attA + attB));
+	DBG;
+	fprintf(stderr,"Calculating winner (%d)\n", prob);
+	unsigned seed = SEED;
+	int p = rand_r(&seed) % 101;
+	return (p <= prob);
+}
+
+void fight(Player* a, Player* b)
+{
+	char msg[MSG_LENGTH];
+	snprintf(msg, MSG_LENGTH, "%s attack %s", a->nick, b->nick);
+	broadcastWithNick(a, msg);
+	if (shouldKillPlayerB(a->attribute, b->attribute)) {
+		snprintf(msg, MSG_LENGTH, "%s killed %s", a->nick, b->nick);
+		broadcastWithNick(a, msg);
+
+		a->attribute += a->attribute < MAX_ATTRIBUTE ? 1 : 0;
+
+		snprintf(msg, MSG_LENGTH, "%s attribute = %d", a->nick, a->attribute);
+		broadcastWithNick(a, msg);
+		disposePlayer(b);
+	}
+}
+
 int attack(Player *player, char* opponentNick)
 {
 	DBG;
 	fprintf(stderr,"%s: Attack %s request\n", player->nick, opponentNick);
+
+	int pos = player->position;
+
+	pthread_mutex_lock(&player->map->mutexs[pos]);
+
+	Player *p = findPlayerWithNick(player->players, opponentNick);
+	if (p != NULL && p->position == pos) {
+		fight(player, p);
+	}
+
+	pthread_mutex_unlock(&player->map->mutexs[player->position]);
+
 	broadcastWithNick(player, "Attack");
 	return 0;
 }

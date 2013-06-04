@@ -23,6 +23,8 @@ typedef struct  {
 
 Player* createPlayer(const char *nick, int attribute, int position, int descriptor, arraylist *players, Map* map);
 void disposePlayer(Player *player);
+int findPlayerIndexWithNick (arraylist *players , char nick[NICK_LENGTH] );
+Player* findPlayerWithNick (arraylist *players , char nick[NICK_LENGTH] );
 
 
 #define _PLAYER_H_
