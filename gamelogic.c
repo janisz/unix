@@ -13,6 +13,13 @@ void broadcast(Player *player, char *msg)
 	}
 }
 
+void broadcastWithNick(Player *player, char *msg)
+{
+	char *m = (char*)malloc(MSG_LENGTH);
+	snprintf(m, MSG_LENGTH, "%s %s", player->nick, msg);
+	broadcast(player, m);
+}
+
 int show(Player *player, char* nil)
 {
 	DBG;
@@ -30,8 +37,9 @@ int show(Player *player, char* nil)
 	pthread_mutex_lock(player->bufforLock);
 	arraylist_join(player->buffor, list);
 	pthread_mutex_unlock(player->bufforLock);
+	pthread_cond_signal(player->bufforCondition);
 
-	//arraylist_destroy(list);
+	arraylist_destroy(list);
 
 	return 0;
 }
@@ -66,6 +74,7 @@ int up(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: UP request\n", player->nick);
+	broadcastWithNick(player, "Go up");
 	return 0;
 }
 
@@ -73,6 +82,7 @@ int down(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: DOWN request\n", player->nick);
+	broadcastWithNick(player, "Go down");
 	return 0;
 }
 
@@ -80,6 +90,7 @@ int left(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: LEFT request\n", player->nick);
+	broadcastWithNick(player, "Go left");
 	return 0;
 }
 
@@ -87,6 +98,7 @@ int right(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: RIGHT request\n", player->nick);
+	broadcastWithNick(player, "Go right");
 	return 0;
 }
 
@@ -94,6 +106,7 @@ int attack(Player *player, char* opponentNick)
 {
 	DBG;
 	fprintf(stderr,"%s: Attack %s request\n", player->nick, opponentNick);
+	broadcastWithNick(player, "Attack");
 	return 0;
 }
 

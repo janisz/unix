@@ -10,7 +10,7 @@
 #include <pthread.h>
 
 Player* createPlayer(const char *nick, int attribute, int position,
-					 int descriptor, arraylist *players)
+					 int descriptor, arraylist *players, Map* map)
 {
 	Player *p = (Player*)malloc(sizeof(Player));
 	assert(p);
@@ -20,6 +20,7 @@ Player* createPlayer(const char *nick, int attribute, int position,
 	p->descriptor = descriptor;
 	p->players = players;
 	p->buffor = arraylist_create();
+	p->map = map;
 	pthread_mutex_init((p->bufforLock), NULL);
 	pthread_cond_init((p->bufforCondition), NULL);
 	return p;

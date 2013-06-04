@@ -126,7 +126,7 @@ Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map, arraylist
 	int pos = getRandomRoom(map);
 
 	fprintf(stderr,"Create new player\n");
-	player = createPlayer(nick, att, pos, socket, players);
+	player = createPlayer(nick, att, pos, socket, players, map);
 	showPlayerInfo(player);
 
 	pthread_create(&player->reader,NULL,clientReader,player);
