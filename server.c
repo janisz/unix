@@ -80,6 +80,12 @@ void* clientReader(void* data)
 		char *ret;
 		fptr f = actionFactory(msg, &ret);
 		f(player, ret);
+		
+		pthread_mutex_lock(player->bufforLock);
+		player->buffor = (char*)malloc(MAX(strlen(msg), MSG_LENGTH));
+		strcpy(player->buffor, "Test message");
+		pthread_cond_signal(player->bufforCondition);
+		pthread_mutex_unlock(player->bufforLock);
 	}
 
 	return 0;
@@ -89,18 +95,28 @@ void* clientWriter(void* data)
 {
 	Player *player = (Player*)data;
 	int fd = player->descriptor;
-	int i=0;
+	int play = 1;
 
-	while (TRUE) {
-		char msg[MSG_LENGTH] = {0};
-		sleep(5);
-		i++;
-		sprintf(msg, "#%d message", i);
-		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"%s did not recive message\n", player->nick);
-			pthread_exit(NULL);
-		}
-		fprintf(stderr,"%s < %s\n", player->nick, msg);
+	while (play) {
+
+		pthread_mutex_lock(player->bufforLock);
+		do {			
+			if (player->buffor) {
+				int len = MAX(strlen(player->buffor), MSG_LENGTH);
+				if(bulk_write(fd, player->buffor, len) < 0) {
+					fprintf(stderr,"%s did not recive message\n", player->nick);
+					play = 0;
+				}
+				fprintf(stderr,"%s < %s\n", player->nick, player->buffor);
+				free(player->buffor);
+				player->buffor = 0;
+				break;
+			} else {
+				pthread_cond_wait(player->bufforCondition, player->bufforLock);
+			}
+		} while (1);
+
+		pthread_mutex_unlock(player->bufforLock);
 	}
 
 	return 0;
