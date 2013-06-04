@@ -22,7 +22,6 @@ Player* createPlayer(const char *nick, int attribute, int position,
 	p->buffor = arraylist_create();
 	p->map = map;
 	pthread_mutex_init((p->bufforLock), NULL);
-	pthread_mutex_init((p->playerLock), NULL);
 	pthread_cond_init((p->bufforCondition), NULL);
 	return p;
 }

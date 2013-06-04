@@ -17,6 +17,8 @@
 #define SHOW	"show"
 #define ATTACK	"attack"
 
+#define ILLEGAL_MOVE "Illegal Move"
+
 #define MAX_ATTRIBUTE 100;
 
 #define NICK_LENGTH 20

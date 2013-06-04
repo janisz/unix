@@ -1,15 +1,22 @@
 #include "gamelogic.h"
 
+#include "map.h"
+
+void sentFeedback(Player *player, char *msg)
+{
+	pthread_mutex_lock(player->bufforLock);
+	arraylist_add(player->buffor, msg);
+	pthread_mutex_unlock(player->bufforLock);
+	pthread_cond_signal(player->bufforCondition);
+}
+
 void broadcast(Player *player, char *msg)
 {
 	DBG;
 	fprintf(stderr,"%s: Broadcast\n", player->nick);
 	for (int i=0; i<arraylist_size(player->players); i++) {
 		Player* p = arraylist_get(player->players, i);
-		pthread_mutex_lock(p->bufforLock);
-		arraylist_add(p->buffor, msg);
-		pthread_mutex_unlock(p->bufforLock);
-		pthread_cond_signal(p->bufforCondition);
+		sentFeedback(p, msg);
 	}
 }
 
@@ -70,11 +77,81 @@ int leftGame(Player *player, char *nil)
 	return 0;
 }
 
+int isCorridorEmpty(Player* player, int pos)
+{
+	DBG;
+	fprintf(stderr,"%s: Check corridor %d is empty\n", player->nick, pos);
+	for (int i=0; i<arraylist_size(player->players); i++) {
+		Player* p = arraylist_get(player->players, i);
+		if (p->position == pos) return FALSE;
+	}
+	DBG;
+	fprintf(stderr,"%s: Corridor %d is empty\n", player->nick, pos);
+	return TRUE;
+}
+
+int isValidMove(Player *p, int newPosition)
+{
+	DBG;
+	fprintf(stderr,"%s: Check if move to %d is valid\n", p->nick, newPosition);
+	if (newPosition < 0 || newPosition > MAP_SIZE((*(p->map)))) {
+		return FALSE;
+	}
+	if (p->map->map[newPosition] == WALL) return FALSE;
+	if (p->map->map[newPosition] == ROOM) return TRUE;
+
+	return isCorridorEmpty(p, newPosition);
+}
+
+int movePlayer(Player *player, int newPosition)
+{
+	DBG;
+	fprintf(stderr,"%s: Move to %d\n", player->nick, newPosition);
+	Map *map = player->map;
+	int ret = TRUE;
+	int currentPosition = player->position;
+	pthread_mutex_lock(&map->mutexs[MIN(newPosition, currentPosition)]);
+	pthread_mutex_lock(&map->mutexs[MAX(newPosition, currentPosition)]);
+
+	if (isValidMove(player, newPosition)) {
+		DBG;
+		fprintf(stderr,"%s: Move to %d\n", player->nick, newPosition);
+		player->position = newPosition;
+	} else {
+		ret = FALSE;
+	}
+
+	pthread_mutex_unlock(&map->mutexs[MIN(newPosition, currentPosition)]);
+	pthread_mutex_unlock(&map->mutexs[MAX(newPosition, currentPosition)]);
+
+	return ret;
+}
+
+int tryMovePlayer(Player *player, int newPosition)
+{
+	DBG;
+	fprintf(stderr,"%s: Try move to %d\n", player->nick, newPosition);
+	if ((newPosition < 0
+		 || newPosition > MAP_SIZE(*player->map)
+		 || isValidMove(player, newPosition) == FALSE)
+		|| movePlayer(player, newPosition) == FALSE) {
+		sentFeedback(player, ILLEGAL_MOVE);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 int up(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: UP request\n", player->nick);
-	broadcastWithNick(player, "Go up");
+
+	int newPosition = player->position - player->map->width;
+
+	if (tryMovePlayer(player, newPosition) == TRUE) {
+		broadcastWithNick(player, "Go up");
+	}
+
 	return 0;
 }
 
@@ -82,7 +159,13 @@ int down(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: DOWN request\n", player->nick);
-	broadcastWithNick(player, "Go down");
+
+	int newPosition = player->position + player->map->width;
+
+	if (tryMovePlayer(player, newPosition) == TRUE) {
+		broadcastWithNick(player, "Go down");
+	}
+
 	return 0;
 }
 
@@ -90,7 +173,13 @@ int left(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: LEFT request\n", player->nick);
-	broadcastWithNick(player, "Go left");
+
+	int newPosition = player->position - 1;
+
+	if (tryMovePlayer(player, newPosition) == TRUE) {
+		broadcastWithNick(player, "Go left");
+	}
+
 	return 0;
 }
 
@@ -98,7 +187,13 @@ int right(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: RIGHT request\n", player->nick);
-	broadcastWithNick(player, "Go right");
+
+	int newPosition = player->position + 1;
+
+	if (tryMovePlayer(player, newPosition) == TRUE) {
+		broadcastWithNick(player, "Go right");
+	}
+
 	return 0;
 }
 
@@ -114,6 +209,7 @@ int undefiniedAction(Player *player, char* action)
 {
 	DBG;
 	fprintf(stderr,"%s: Undefinied request: %s\n", player->nick, action);
+	sentFeedback(player, ILLEGAL_MOVE);
 	return 0;
 }
 
