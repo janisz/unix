@@ -3,6 +3,8 @@ CC := color-gcc
 
 all: server client
 
+travis: CC = gcc
+travis: all
 debug: CC += -DDEBUG -g
 debug: server client
 
