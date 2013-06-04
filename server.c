@@ -78,9 +78,9 @@ void* clientReader(void* data)
 
 		char *ret;
 		fptr f = actionFactory(msg, &ret);
-		pthread_mutex_lock(player->playerLock);
+
 		f(player, ret);
-		pthread_mutex_unlock(player->playerLock);
+
 		DBG;
 	}
 

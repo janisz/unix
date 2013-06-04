@@ -1,15 +1,22 @@
 #include "gamelogic.h"
 
+#include "map.h"
+
+void sentFeedback(Player *player, char *msg)
+{
+	pthread_mutex_lock(player->bufforLock);
+	arraylist_add(player->buffor, msg);
+	pthread_mutex_unlock(player->bufforLock);
+	pthread_cond_signal(player->bufforCondition);
+}
+
 void broadcast(Player *player, char *msg)
 {
 	DBG;
 	fprintf(stderr,"%s: Broadcast\n", player->nick);
 	for (int i=0; i<arraylist_size(player->players); i++) {
 		Player* p = arraylist_get(player->players, i);
-		pthread_mutex_lock(p->bufforLock);
-		arraylist_add(p->buffor, msg);
-		pthread_mutex_unlock(p->bufforLock);
-		pthread_cond_signal(p->bufforCondition);
+		sentFeedback(p, msg);		
 	}
 }
 
@@ -70,11 +77,67 @@ int leftGame(Player *player, char *nil)
 	return 0;
 }
 
+int isCorridorEmpty(Player* p, int pos)
+{
+	for (int i=0; i<arraylist_size(p->players); i++) {
+		Player* p = arraylist_get(p->players, i);
+		if (p->position == pos) return FALSE;
+	}
+	return TRUE;
+}
+
+int isValidMove(Player *p, int newPosition)
+{
+	if (newPosition < 0) return FALSE;
+	if (p->map->map[newPosition] == WALL) return FALSE;
+	if (p->map->map[newPosition] == ROOM) return TRUE;	
+	
+	return isCorridorEmpty(p, newPosition);
+}
+
+int movePlayer(Player *player, int newPosition)
+{
+	Map *map = player->map;
+	int ret = 0;
+	int currentPosition = player->position;
+	pthread_mutex_lock(&map->mutexs[MIN(newPosition, currentPosition)]);
+	pthread_mutex_lock(&map->mutexs[MAX(newPosition, currentPosition)]);
+	
+	if (isValidMove(player, newPosition)) {
+		player->position = newPosition;		
+	} else {
+		ret = -1;
+	}
+	
+	pthread_mutex_unlock(&map->mutexs[MIN(newPosition, currentPosition)]);
+	pthread_mutex_unlock(&map->mutexs[MAX(newPosition, currentPosition)]);
+	
+	return ret;
+}
+
+int tryMovePlayer(Player *player, int newPosition)
+{
+	if ((newPosition < 0 || !isValidMove(player, newPosition)) 
+		&& movePlayer(player, newPosition) != 0)
+	{
+		sentFeedback(player, ILLEGAL_MOVE);
+		return FALSE;
+	} else {	
+		return TRUE;
+	}
+}
+
 int up(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: UP request\n", player->nick);
-	broadcastWithNick(player, "Go up");
+		
+	int newPosition = player->position - player->map->width;
+
+	if (tryMovePlayer(player, newPosition) == TRUE) {	
+		broadcastWithNick(player, "Go up");
+	}
+		
 	return 0;
 }
 
@@ -114,6 +177,7 @@ int undefiniedAction(Player *player, char* action)
 {
 	DBG;
 	fprintf(stderr,"%s: Undefinied request: %s\n", player->nick, action);
+	sentFeedback(player, ILLEGAL_MOVE);
 	return 0;
 }
 
