@@ -1,25 +1,63 @@
 #include "gamelogic.h"
 
+void broadcast(Player *player, char *msg)
+{
+	DBG;
+	fprintf(stderr,"%s: Broadcast\n", player->nick);
+	for (int i=0; i<arraylist_size(player->players); i++) {
+		Player* p = arraylist_get(player->players, i);		
+		pthread_mutex_lock(p->bufforLock);		
+		arraylist_add(p->buffor, msg);
+		pthread_mutex_unlock(p->bufforLock);
+		pthread_cond_signal(p->bufforCondition);
+	}
+}
+
 int show(Player *player, char* nil)
 {
 	DBG;
 	fprintf(stderr,"%s: Show request\n", player->nick);
-	
+
 	arraylist *list = arraylist_create();
-		
-	for (int i=0; i<arraylist_size(player->players); i++)
-	{
+
+	for (int i=0; i<arraylist_size(player->players); i++) {
 		Player* p = arraylist_get(player->players, i);
 		char *msg = (char*)malloc(MSG_LENGTH);
 		snprintf(msg, MSG_LENGTH, "%s position: %d", p->nick, p->position);
 		arraylist_add(list, msg);
 	}
-	
+
 	pthread_mutex_lock(player->bufforLock);
 	arraylist_join(player->buffor, list);
 	pthread_mutex_unlock(player->bufforLock);
-	
+
 	arraylist_destroy(list);
+
+	return 0;
+}
+
+int join(Player *player, char *nil)
+{
+	DBG;
+	fprintf(stderr,"%s: Join Game\n", player->nick);
+	
+	char *msg = (char*)malloc(MSG_LENGTH);
+	snprintf(msg, MSG_LENGTH, "%s join game", player->nick);
+	
+	broadcast(player, msg);
+	
+	return 0;
+}
+
+int leftGame(Player *player, char *nil)
+{
+	DBG;
+	fprintf(stderr,"%s: Left Game\n", player->nick);
+	
+	char *msg = (char*)malloc(MSG_LENGTH);
+	snprintf(msg, MSG_LENGTH, "%s left game", player->nick);
+	
+	broadcast(player, msg);
 	
 	return 0;
 }

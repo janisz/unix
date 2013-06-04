@@ -63,11 +63,14 @@ void* clientReader(void* data)
 {
 	Player *player = (Player*)data;
 	int fd = player->descriptor;
+	
+	join(player, NULL);
 
 	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"client read problem\n");
+			leftGame(player, NULL);
 			removePlayer(player);
 			pthread_exit(NULL);
 		}
@@ -106,7 +109,7 @@ void* clientWriter(void* data)
 				DBG;
 				fprintf(stderr,"%s has %d pending messages \n", player->nick, arraylist_size(player->buffor));
 				while (arraylist_size(player->buffor) != 0) {
-					char *buf = (char*)arraylist_pop(player->buffor);					
+					char *buf = (char*)arraylist_pop(player->buffor);
 					if(bulk_write(fd, buf, MSG_LENGTH) < 0) {
 						fprintf(stderr,"%s did not recive message\n", player->nick);
 						play = 0;

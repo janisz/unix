@@ -28,9 +28,11 @@ Player* createPlayer(const char *nick, int attribute, int position,
 void disposePlayer(Player *p)
 {
 	if(TEMP_FAILURE_RETRY(close(p->descriptor))<0)ERR("close");
-	pthread_cond_destroy((p->bufforCondition));
-	pthread_mutex_destroy((p->bufforLock));
+	pthread_mutex_lock(p->bufforLock);	
 	arraylist_destroy(p->buffor);
+	pthread_mutex_unlock(p->bufforLock);	
+	pthread_cond_destroy((p->bufforCondition));
+	pthread_mutex_destroy((p->bufforLock));	
 }
 
 void showPlayerInfo(Player *p)
