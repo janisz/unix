@@ -40,7 +40,9 @@ void deleteMap(Map *map)
 	}
 	map->width = map->height = 0;
 	free(map->map);
+	map = NULL;
 	free(map->mutexs);
+	map->mutexs = NULL;
 	arraylist_destroy(map->rooms);
 }
 

@@ -63,9 +63,9 @@ void* clientReader(void* data)
 {
 	Player *player = (Player*)data;
 	int fd = player->descriptor;
-	
-	join(player, NULL);
 
+	join(player, NULL);
+	DBG;
 	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
@@ -76,20 +76,10 @@ void* clientReader(void* data)
 		}
 		fprintf(stderr,"%s > %s\n", player->nick, msg);
 
-		char *c = strchr(msg, '\n');
-		if (c)
-			*c = 0;
-
 		char *ret;
 		fptr f = actionFactory(msg, &ret);
 		f(player, ret);
-
-		pthread_mutex_lock(player->bufforLock);
-		char* buf = (char*)malloc(MSG_LENGTH);
-		strcpy(buf, "Test message");
-		arraylist_add(player->buffor, buf);
-		pthread_cond_signal(player->bufforCondition);
-		pthread_mutex_unlock(player->bufforLock);
+		DBG;
 	}
 
 	return 0;
@@ -115,7 +105,7 @@ void* clientWriter(void* data)
 						play = 0;
 					}
 					fprintf(stderr,"%s < %s\n", player->nick, buf);
-					free(buf);
+					buf = NULL;	//arraylist take care of memory
 					break;
 				}
 			} else {

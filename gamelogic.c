@@ -5,8 +5,8 @@ void broadcast(Player *player, char *msg)
 	DBG;
 	fprintf(stderr,"%s: Broadcast\n", player->nick);
 	for (int i=0; i<arraylist_size(player->players); i++) {
-		Player* p = arraylist_get(player->players, i);		
-		pthread_mutex_lock(p->bufforLock);		
+		Player* p = arraylist_get(player->players, i);
+		pthread_mutex_lock(p->bufforLock);
 		arraylist_add(p->buffor, msg);
 		pthread_mutex_unlock(p->bufforLock);
 		pthread_cond_signal(p->bufforCondition);
@@ -31,7 +31,7 @@ int show(Player *player, char* nil)
 	arraylist_join(player->buffor, list);
 	pthread_mutex_unlock(player->bufforLock);
 
-	arraylist_destroy(list);
+	//arraylist_destroy(list);
 
 	return 0;
 }
@@ -40,12 +40,12 @@ int join(Player *player, char *nil)
 {
 	DBG;
 	fprintf(stderr,"%s: Join Game\n", player->nick);
-	
+
 	char *msg = (char*)malloc(MSG_LENGTH);
 	snprintf(msg, MSG_LENGTH, "%s join game", player->nick);
-	
+
 	broadcast(player, msg);
-	
+
 	return 0;
 }
 
@@ -53,12 +53,12 @@ int leftGame(Player *player, char *nil)
 {
 	DBG;
 	fprintf(stderr,"%s: Left Game\n", player->nick);
-	
+
 	char *msg = (char*)malloc(MSG_LENGTH);
 	snprintf(msg, MSG_LENGTH, "%s left game", player->nick);
-	
+
 	broadcast(player, msg);
-	
+
 	return 0;
 }
 
