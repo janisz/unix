@@ -36,7 +36,7 @@ Map createMap(int width, int height, char *map);
 void deleteMap(Map *map);
 Map readMapFromFile(char *filename);
 int indexOnMap(Map map, int x, int y);
-int getCartesian(Map map, int index, int *x, int *y);
+int getCartesian(Map *map, int index, int *x, int *y);
 char getField(int x, int y);
 int getRandomRoom(Map *m);
 void printMap(Map map);

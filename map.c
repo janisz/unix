@@ -101,3 +101,12 @@ void printMap(Map map)
 
 	printRooms(&map);
 }
+
+int getCartesian(Map *map, int index, int *x, int *y)
+{
+	return 0;
+}
+char getField(int x, int y)
+{
+	return 0;
+}

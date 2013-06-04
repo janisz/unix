@@ -17,6 +17,7 @@ typedef struct  {
 	arraylist *players;
 	arraylist* buffor;
 	pthread_mutex_t bufforLock[1];
+	pthread_mutex_t playerLock[1];
 	pthread_cond_t  bufforCondition[1];
 	Map* map;
 } Player;
