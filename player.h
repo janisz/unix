@@ -25,7 +25,8 @@ Player* createPlayer(const char *nick, int attribute, int position, int descript
 void disposePlayer(Player *player);
 int findPlayerIndexWithNick (arraylist *players , char nick[NICK_LENGTH] );
 Player* findPlayerWithNick (arraylist *players , char nick[NICK_LENGTH] );
-
+void removePlayer(Player *player);
+void disconnectPlayer(Player *player);
 
 #define _PLAYER_H_
 #endif

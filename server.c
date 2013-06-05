@@ -17,48 +17,6 @@ void usage(char *name)
 	printf("USAGE: %s port\n", name);
 }
 
-int findPlayerIndexWithNick(arraylist *players, char nick[NICK_LENGTH])
-{
-	fprintf(stderr,"Search for %s\nPlayers count: %d\n", nick, arraylist_size(players));
-	for (int i=0; i<arraylist_size(players); i++) {
-		Player *p = (Player*)arraylist_get(players, i);
-		if (strcmp(p->nick, nick) == 0) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-int findPlayerIndex(Player *player)
-{
-	fprintf(stderr,"Search for %s\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
-	for (int i=0; i<arraylist_size(player->players); i++) {
-		Player *p = (Player*)arraylist_get(player->players, i);
-		if (strcmp(p->nick, player->nick) == 0) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-Player* findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
-{
-	int index = findPlayerIndexWithNick(players, nick);
-	return arraylist_get(players, index);
-}
-
-void removePlayer(Player *player)
-{
-	pthread_mutex_lock(player->players->lock);
-	fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
-	int index = findPlayerIndex(player);
-	assert(index >= 0);
-	disposePlayer(player);
-	arraylist_remove(player->players, index);
-	fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
-	pthread_mutex_unlock(player->players->lock);
-}
-
 void* clientReader(void* data)
 {
 	Player *player = (Player*)data;
@@ -74,7 +32,7 @@ void* clientReader(void* data)
 			removePlayer(player);
 			pthread_exit(NULL);
 		}
-		fprintf(stderr,"%s > %s\n", player->nick, msg);
+		fprintf(stderr,"%s > %s", player->nick, msg);
 
 		char *ret;
 		fptr f = actionFactory(msg, &ret);

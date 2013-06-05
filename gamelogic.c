@@ -217,10 +217,11 @@ void fight(Player* a, Player* b)
 		broadcastWithNick(a, msg);
 
 		a->attribute += a->attribute < MAX_ATTRIBUTE ? 1 : 0;
+		b->attribute = -1;
 
 		snprintf(msg, MSG_LENGTH, "%s attribute = %d", a->nick, a->attribute);
 		broadcastWithNick(a, msg);
-		disposePlayer(b);
+		disconnectPlayer(b);
 	}
 }
 
@@ -234,13 +235,16 @@ int attack(Player *player, char* opponentNick)
 	pthread_mutex_lock(&player->map->mutexs[pos]);
 
 	Player *p = findPlayerWithNick(player->players, opponentNick);
-	if (p != NULL && p->position == pos) {
+	if (p != NULL && p != player
+		&& p->position == pos && p->attribute >=0
+		&& player->attribute >= 0) {
 		fight(player, p);
+	} else {
+		sentFeedback(player, ILLEGAL_MOVE);
 	}
 
 	pthread_mutex_unlock(&player->map->mutexs[player->position]);
 
-	broadcastWithNick(player, "Attack");
 	return 0;
 }
 
@@ -250,6 +254,19 @@ int undefiniedAction(Player *player, char* action)
 	fprintf(stderr,"%s: Undefinied request: %s\n", player->nick, action);
 	sentFeedback(player, ILLEGAL_MOVE);
 	return 0;
+}
+
+fptr parseAttackRequest(char action[MSG_LENGTH], char** ret)
+{
+	*ret = strstr(action, "{");
+	char* p = strstr(action, "}");
+	if (((*ret == NULL) || (p == NULL)) || *ret > p ) {
+		*ret = action;
+		return undefiniedAction;
+	}
+	*ret = *ret + 1;
+	*p = '\0';
+	return attack;
 }
 
 fptr actionFactory(char action[MSG_LENGTH], char** ret)
@@ -266,8 +283,7 @@ fptr actionFactory(char action[MSG_LENGTH], char** ret)
 	} else if  (strstr(action, RIGHT) == action) {
 		return right;
 	} else if (strstr(action, ATTACK) == action) {
-		*ret = action + strlen(ATTACK) + 1;
-		return attack;
+		return parseAttackRequest(action, ret);
 	}
 
 	*ret = action;
