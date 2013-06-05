@@ -24,7 +24,7 @@ fptr actionFactory(char action[MSG_LENGTH], char** ret);
 
 int join(Player *player, char*);
 
-int left(Player *player, char*);
+int leftGame(Player *player, char*);
 
 #define _GAME_LOGIC_H_
 #endif

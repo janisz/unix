@@ -64,7 +64,6 @@ void* clientWriter(void* data)
 						play = 0;
 					}
 					fprintf(stderr,"%s < %s\n", player->nick, buf);
-					buf = NULL;	//arraylist takes care of memory
 				}
 				break;
 			} else {

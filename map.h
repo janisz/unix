@@ -5,10 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <ctype.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
