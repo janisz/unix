@@ -40,7 +40,9 @@ void deleteMap(Map *map)
 	}
 	map->width = map->height = 0;
 	free(map->map);
+	map = NULL;
 	free(map->mutexs);
+	map->mutexs = NULL;
 	arraylist_destroy(map->rooms);
 }
 
@@ -98,4 +100,13 @@ void printMap(Map map)
 	printf("Rooms:\n");
 
 	printRooms(&map);
+}
+
+int getCartesian(Map *map, int index, int *x, int *y)
+{
+	return 0;
+}
+char getField(int x, int y)
+{
+	return 0;
 }

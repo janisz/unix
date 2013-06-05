@@ -28,13 +28,12 @@
 
 int sethandler (void ( *f ) ( int ) , int sigNo );
 void usage (char *name );
-int findPlayerIndexWithNick (arraylist *players , char nick[NICK_LENGTH] );
-Player* findPlayerWithNick (arraylist *players , char nick[NICK_LENGTH] );
 void removePlayer (Player *player );
 void * clientReader (void * data );
 void * clientWriter (void * data );
 Player * initializePlayer (int socket , char nick[NICK_LENGTH] , Map *map , arraylist *players );int isNickValid (arraylist *players , char nick[NICK_LENGTH] );
 void addNewPlayer (int socket , arraylist *players , Map *map );
 void waitForPlayers (int sfd , uint32_t port , Map map );
+void disconnectPlayer(Player *player);
 
 #endif /* _SERVER_H_ */

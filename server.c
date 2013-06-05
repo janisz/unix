@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include "gamelogic.h"
+
 int sethandler( void (*f)(int), int sigNo)
 {
 	struct sigaction act;
@@ -15,61 +17,29 @@ void usage(char *name)
 	printf("USAGE: %s port\n", name);
 }
 
-int findPlayerIndexWithNick(arraylist *players, char nick[NICK_LENGTH])
-{
-	fprintf(stderr,"Search for %s\nPlayers count: %d\n", nick, arraylist_size(players));
-	for (int i=0; i<arraylist_size(players); i++) {
-		Player *p = (Player*)arraylist_get(players, i);
-		if (strcmp(p->nick, nick) == 0) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-int findPlayerIndex(Player *player)
-{
-	fprintf(stderr,"Search for %s\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
-	for (int i=0; i<arraylist_size(player->players); i++) {
-		Player *p = (Player*)arraylist_get(player->players, i);
-		if (strcmp(p->nick, player->nick) == 0) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-Player* findPlayerWithNick(arraylist *players, char nick[NICK_LENGTH])
-{
-	int index = findPlayerIndexWithNick(players, nick);
-	return arraylist_get(players, index);
-}
-
-void removePlayer(Player *player)
-{
-	pthread_mutex_lock(player->players->lock);
-	fprintf(stderr,"%s will be removed\nPlayers count: %d\n", player->nick, arraylist_size(player->players));
-	int index = findPlayerIndex(player);
-	assert(index >= 0);
-	disposePlayer(player);
-	arraylist_remove(player->players, index);
-	fprintf(stderr,"Players count: %d\n", arraylist_size(player->players));
-	pthread_mutex_unlock(player->players->lock);
-}
-
 void* clientReader(void* data)
 {
 	Player *player = (Player*)data;
 	int fd = player->descriptor;
 
+	join(player, NULL);
+	DBG;
 	while (TRUE) {
 		char msg[MSG_LENGTH] = {0};
 		if (bulk_read(fd, &msg, MSG_LENGTH) < MSG_LENGTH) {
 			fprintf(stderr,"client read problem\n");
+			leftGame(player, NULL);
 			removePlayer(player);
 			pthread_exit(NULL);
 		}
-		fprintf(stderr,"%s > %s\n", player->nick, msg);
+		fprintf(stderr,"%s > %s", player->nick, msg);
+
+		char *ret;
+		fptr f = actionFactory(msg, &ret);
+
+		f(player, ret);
+
+		DBG;
 	}
 
 	return 0;
@@ -79,20 +49,30 @@ void* clientWriter(void* data)
 {
 	Player *player = (Player*)data;
 	int fd = player->descriptor;
-	int i=0;
+	int play = 1;
 
-	while (TRUE) {
-		char msg[MSG_LENGTH] = {0};
-		sleep(5);
-		i++;
-		sprintf(msg, "#%d message", i);
-		if(bulk_write(fd, msg, MSG_LENGTH) < MSG_LENGTH) {
-			fprintf(stderr,"%s did not recive message\n", player->nick);
-			pthread_exit(NULL);
-		}
-		fprintf(stderr,"%s < %s\n", player->nick, msg);
+	while (play) {
+		pthread_mutex_lock(player->bufforLock);
+		do {
+			if (arraylist_size(player->buffor) > 0) {
+				DBG;
+				fprintf(stderr,"%s has %d pending messages \n", player->nick, arraylist_size(player->buffor));
+				while (arraylist_size(player->buffor) != 0) {
+					char *buf = (char*)arraylist_pop(player->buffor);
+					if(bulk_write(fd, buf, MSG_LENGTH) < 0) {
+						fprintf(stderr,"%s did not recive message\n", player->nick);
+						play = 0;
+					}
+					fprintf(stderr,"%s < %s\n", player->nick, buf);
+					buf = NULL;	//arraylist takes care of memory
+				}
+				break;
+			} else {
+				pthread_cond_wait(player->bufforCondition, player->bufforLock);
+			}
+		} while (1);
+		pthread_mutex_unlock(player->bufforLock);
 	}
-
 	return 0;
 }
 
@@ -103,7 +83,7 @@ Player* initializePlayer(int socket, char nick[NICK_LENGTH], Map *map, arraylist
 	int pos = getRandomRoom(map);
 
 	fprintf(stderr,"Create new player\n");
-	player = createPlayer(nick, att, pos, socket, players);
+	player = createPlayer(nick, att, pos, socket, players, map);
 	showPlayerInfo(player);
 
 	pthread_create(&player->reader,NULL,clientReader,player);
